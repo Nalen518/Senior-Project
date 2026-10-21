@@ -129,7 +129,7 @@ export interface InsightResponse {
   trend: Trend;
   /** Plain-language Indonesian sentence to show as-is. */
   message: string;
-  /** Themes found in this week's notes (empty until Stage 2 NLP is switched on). */
+  /** Top 3 themes (most frequent first) from the last 14 days of notes (empty until Stage 2 NLP is switched on). */
   themes: ThemeCode[];
   /** Up to 3 matched resources. May be empty. */
   resources: Resource[];

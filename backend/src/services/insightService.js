@@ -3,6 +3,9 @@
 const { computeTrend } = require('../logic/trendRules');
 const { toLocalDate, addDays } = require('../logic/checkDate');
 
+const THEMES_WINDOW_DAYS = 14; // FR-13: themes from the last 14 days of notes, including today
+const MAX_THEMES = 3; // FR-13: show at most the top 3
+
 function createInsightService({ models, config, clock = () => new Date() }) {
   const today = () => toLocalDate(clock(), config.timeZone);
 
@@ -19,11 +22,15 @@ function createInsightService({ models, config, clock = () => new Date() }) {
     /** GET /api/insights -> { trend, message, themes[], resources[] } */
     async getInsight(userId) {
       const t = await trend(userId);
-      const themes = await models.noteAnalyses.recentThemeCodes(userId, addDays(today(), -6));
+      const themes = await models.noteAnalyses.recentThemeCodes(
+        userId,
+        addDays(today(), -(THEMES_WINDOW_DAYS - 1)),
+        MAX_THEMES,
+      );
       const resources = await models.resources.match({ themeCodes: themes, needsSupport: t.needsSupport });
       return { trend: t.trend, message: t.message, themes, resources };
     },
   };
 }
 
-module.exports = { createInsightService };
+module.exports = { createInsightService, THEMES_WINDOW_DAYS, MAX_THEMES };

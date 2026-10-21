@@ -102,7 +102,7 @@ Rules in `backend/src/logic/trendRules.js`; thresholds are named constants at th
 
 `trend` is `"declining"` if the low streak ≥ 3 **or** delta ≤ −0.75; `"improving"` if delta ≥ +0.75; otherwise `"stable"`. `message` is a fixed English template (low streak, declining, improving, low, stable, not enough data). Support is "needed" when the streak ≥ 3 or the average ≤ 2.5; that is internal and only changes which `resources` are returned.
 
-`themes` are theme codes from completed NLP analyses of this week's notes (empty while NLP is off). `resources` is up to 3 items: those tagged with the user's themes, plus counselling/crisis contacts when support is needed.
+`themes` are the **top 3** theme codes (most frequent first, ties alphabetical) from completed NLP analyses of notes in the **last 14 calendar days** (WIB, including today), per SRD FR-13. The trend itself still uses the 7-day window above. `themes` is empty while NLP is off or no analysis is `done`. The frontend then hides the themes row completely. `resources` is up to 3 items: those tagged with the user's themes, plus counselling/crisis contacts when support is needed.
 
 ### 5.6 Resources
 Public. `tags` are theme codes. Phone-only contacts come back as a `tel:` link in `url`; crisis contacts prefer the phone number. Order: primary crisis contact first.

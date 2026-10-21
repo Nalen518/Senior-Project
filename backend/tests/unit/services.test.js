@@ -6,6 +6,7 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const { createCheckinService } = require('../../src/services/checkinService');
 const { parseModelReply } = require('../../src/services/nlpService');
+const { createInsightService } = require('../../src/services/insightService');
 
 function setup({ crisisResult = false, nlpEnabled = true, applied = true } = {}) {
   const calls = { analyzeLater: [], deleted: [], upserts: [] };
@@ -80,5 +81,29 @@ describe('nlpService.parseModelReply', () => {
   test('rejects a reply without a valid sentiment', () => {
     assert.throws(() => parseModelReply('{"sentiment":"sad"}', allowed), /invalid sentiment/);
     assert.throws(() => parseModelReply('I think the student is stressed.', allowed), /no JSON/);
+  });
+});
+
+describe('insightService themes (FR-13)', () => {
+  test('asks for the top 3 themes from the last 14 WIB days and matches resources on them', async () => {
+    const calls = {};
+    const service = createInsightService({
+      config: { timeZone: 'Asia/Jakarta' },
+      clock: () => new Date('2026-09-28T13:00:00Z'), // 20:00 WIB on 28 Sep
+      models: {
+        checkins: { moodsSince: async () => [] },
+        noteAnalyses: {
+          recentThemeCodes: async (userId, fromDate, limit) => {
+            calls.themes = { userId, fromDate, limit };
+            return ['exams', 'sleep'];
+          },
+        },
+        resources: { match: async (args) => ((calls.match = args), []) },
+      },
+    });
+    const res = await service.getInsight('u1');
+    assert.deepEqual(calls.themes, { userId: 'u1', fromDate: '2026-09-15', limit: 3 });
+    assert.deepEqual(calls.match, { themeCodes: ['exams', 'sleep'], needsSupport: false });
+    assert.deepEqual(res.themes, ['exams', 'sleep']);
   });
 });
