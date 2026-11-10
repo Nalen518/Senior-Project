@@ -1,0 +1,157 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
+type Resource = Awaited<ReturnType<typeof api.getResources>>[number];
+
+export const  Hero = () => {
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const loadResources = async () => {
+      try {
+        setResources(await api.getResources());
+      } catch {
+        setErrorMessage(
+          "We could not load support contacts right now. Please try again shortly.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadResources();
+  }, []);
+
+  return (
+    <>
+
+      <main className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-[#1F3347] sm:px-6">
+        <div className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full bg-[#E4A79A]" />
+        <div className="pointer-events-none absolute right-20 top-24 h-20 w-20 rounded-full bg-[#ECE1BE]" />
+        <div className="pointer-events-none absolute -right-12 top-40 h-36 w-36 rounded-full bg-[#D3C1E5]" />
+        <div className="pointer-events-none absolute -left-10 bottom-24 h-36 w-36 rounded-full bg-[#ECE1BE]" />
+        <div className="pointer-events-none absolute -right-10 bottom-14 h-40 w-40 rounded-full bg-[#E3F2F1]" />
+
+        <div className="relative mx-auto max-w-3xl">
+          <header className="mb-5">
+            <h1 className="font-serif text-3xl font-bold sm:text-4xl">
+              Support at UGM
+            </h1>
+            <p className="mt-1 text-sm text-[#3D4D59]">
+              Real people who can listen. MindMeter is for reflection and
+              pointing you to help. It is not medical advice.
+            </p>
+          </header>
+
+          <section className="rounded-xl bg-[#C9AFD8] p-4 shadow-sm sm:p-5">
+            <h2 className="font-serif text-lg font-bold">
+              If you need help right now
+            </h2>
+            <p className="mt-1 text-sm text-[#3D4D59]">
+              If you are in immediate danger, call local emergency services or
+              go to the nearest hospital.
+            </p>
+
+            <div className="mt-3 space-y-2">
+              {isLoading && (
+                <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
+                  Loading support contacts…
+                </p>
+              )}
+
+              {errorMessage && (
+                <p
+                  className="rounded-lg bg-white px-4 py-5 text-sm text-red-700"
+                  role="alert"
+                >
+                  {errorMessage}
+                </p>
+              )}
+
+              {!isLoading && !errorMessage && resources.length === 0 && (
+                <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
+                  Support contacts will appear here once they have been verified.
+                </p>
+              )}
+
+              {resources.map((resource) => {
+                const isPhoneLink = resource.url.startsWith("tel:");
+                const actionLabel = isPhoneLink ? "Call" : "Open";
+
+                return (
+                  <article
+                    key={resource.id}
+                    className="flex flex-col gap-3 rounded-xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <h3 className="font-serif text-base font-bold">
+                        {resource.title}
+                      </h3>
+                      <p className="mt-1 text-xs text-[#3D4D59]">
+                        {resource.description}
+                      </p>
+                    </div>
+
+                    <a
+                      href={resource.url}
+                      target={isPhoneLink ? undefined : "_blank"}
+                      rel={isPhoneLink ? undefined : "noreferrer"}
+                      className="shrink-0 rounded-lg bg-[#F6A15E] px-5 py-2 text-center text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                    >
+                      {actionLabel}
+                    </a>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="mt-5">
+            <h2 className="font-serif text-lg font-bold">
+              Talk to a counsellor
+            </h2>
+            <p className="mt-1 text-sm text-[#3D4D59]">
+              Support contacts are listed above. More detailed groups will be
+              added when the API provides each service category.
+            </p>
+
+            <details className="mt-3 border-b border-[#B8C0C3] py-3">
+              <summary className="cursor-pointer font-serif font-bold">
+                University services
+              </summary>
+              <p className="mt-2 text-sm text-[#3D4D59]">
+                University counselling services will appear here.
+              </p>
+            </details>
+
+            <details className="border-b border-[#B8C0C3] py-3">
+              <summary className="cursor-pointer font-serif font-bold">
+                Faculty services
+              </summary>
+              <p className="mt-2 text-sm text-[#3D4D59]">
+                Faculty counselling services will appear here.
+              </p>
+            </details>
+
+            <details className="border-b border-[#B8C0C3] py-3">
+              <summary className="cursor-pointer font-serif font-bold">
+                Clinics
+              </summary>
+              <p className="mt-2 text-sm text-[#3D4D59]">
+                Clinic contacts will appear here.
+              </p>
+            </details>
+          </section>
+
+          <p className="mt-8 text-xs text-[#5E6A70]">
+            MindMeter is not a medical or diagnostic tool.
+          </p>
+        </div>
+      </main>
+    </>
+  );
+}
