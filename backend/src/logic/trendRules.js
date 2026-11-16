@@ -13,12 +13,12 @@ const LOW_STREAK_DAYS = 3; // this many consecutive low days suggests reaching o
 const TREND_DELTA = 0.75; // change between first and second half of the window that counts as a trend
 
 const MESSAGES = {
-  notEnough: 'Check in beberapa hari lagi untuk melihat pola mood kamu.',
-  lowStreak: (n) => `Mood kamu rendah ${n} hari berturut-turut. Tidak apa-apa untuk mencari teman bicara.`,
-  declining: 'Mood kamu cenderung menurun minggu ini.',
-  improving: 'Mood kamu cenderung membaik minggu ini.',
-  low: 'Mood kamu cenderung rendah beberapa hari ini.',
-  stable: 'Mood kamu cukup stabil minggu ini.',
+  notEnough: 'Check in a few more days to see your mood pattern.',
+  lowStreak: (n) => `Your mood has been low for ${n} days in a row. It is okay to reach out to someone you trust.`,
+  declining: 'Your mood has been trending down this week.',
+  improving: 'Your mood has been trending up this week.',
+  low: 'Your mood has been on the low side for the past few days.',
+  stable: 'Your mood has been fairly steady this week.',
 };
 
 const average = (values) => values.reduce((sum, v) => sum + v, 0) / values.length;

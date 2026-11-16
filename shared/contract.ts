@@ -1,7 +1,7 @@
 /**
  * MindMeter API contract — the single source of truth for every request and response.
  *
- * RULES (see docs/MindMeter_Development_Plan.pdf):
+ * RULES (see docs/API-CONTRACT.md):
  *  - Types only. No runtime code, so importing this file can never break a build.
  *  - Frontend: `import type { ... } from '<path>/shared/contract'`, used ONLY in frontend/src/lib/api.ts.
  *  - Backend (JavaScript) is checked against these types automatically:
@@ -127,7 +127,7 @@ export type CheckinListResponse = CheckinListItem[];
 
 export interface InsightResponse {
   trend: Trend;
-  /** Plain-language Indonesian sentence to show as-is. */
+  /** Plain-language English sentence to show as-is. */
   message: string;
   /** Themes found in this week's notes (empty until Stage 2 NLP is switched on). */
   themes: ThemeCode[];

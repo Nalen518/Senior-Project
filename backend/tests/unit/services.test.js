@@ -14,7 +14,7 @@ function setup({ crisisResult = false, nlpEnabled = true, applied = true } = {})
     clock: () => new Date('2026-09-28T13:00:00Z'),
     crisis: { check: async () => crisisResult },
     nlp: { enabled: nlpEnabled, analyzeLater: (id, note) => calls.analyzeLater.push({ id, note }) },
-    insights: { trend: async () => ({ message: 'Mood kamu cukup stabil minggu ini.' }) },
+    insights: { trend: async () => ({ message: 'Your mood has been fairly steady this week.' }) },
     models: {
       checkins: { upsert: async (row) => (calls.upserts.push(row), { id: 'chk_1', applied }) },
       noteAnalyses: { deleteForCheckin: async (id) => calls.deleted.push(id) },
@@ -35,7 +35,7 @@ describe('checkinService safety rules', () => {
   test('normal note: rule-based insight returned, NLP queued in the background', async () => {
     const { service, calls } = setup();
     const res = await service.submit('u1', { mood_value: 3, note_text: 'tugas numpuk', client_ts: null });
-    assert.deepEqual(res, { id: 'chk_1', saved: true, insight: 'Mood kamu cukup stabil minggu ini.', crisis_flag: false });
+    assert.deepEqual(res, { id: 'chk_1', saved: true, insight: 'Your mood has been fairly steady this week.', crisis_flag: false });
     assert.deepEqual(calls.analyzeLater, [{ id: 'chk_1', note: 'tugas numpuk' }]);
   });
 

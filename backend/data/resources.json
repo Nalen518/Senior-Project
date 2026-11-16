@@ -2,8 +2,8 @@
   "_readme": "Support contacts shown on the support/crisis screen. Every entry in `resources` needs verified_at (YYYY-MM-DD): the date a teammate opened the source link or sent a WhatsApp message and confirmed the contact still works. npm run db:seed-safety refuses to load entries without it. Exactly one entry may have is_primary_crisis: true (shown first). type: crisis | counselling | self_help. tags: theme codes (sleep, workload, exams, isolation, relationships, finance, health, motivation). Crisis contacts return `phone` as a tel: link before `url`, so WhatsApp-only lines must use a wa.me link in `url` and phone: null. `verify_notes` is for the verifier and is not loaded. Research gathered 2026-10-17.",
   "resources": [
     {
-      "title": "MHERL — Layanan Darurat Kesehatan Mental UGM (24 jam)",
-      "description": "Mental Health Emergency Response Line UGM. Chat WhatsApp kapan saja, 24 jam, jika kamu sedang dalam krisis atau butuh bantuan segera.",
+      "title": "MHERL — UGM Mental Health Emergency Response Line (24 hours)",
+      "description": "UGM Mental Health Emergency Response Line. Chat on WhatsApp any time, 24 hours a day, if you are in crisis or need help right away.",
       "phone": null,
       "url": "https://wa.me/6281329520052",
       "type": "crisis",
@@ -14,8 +14,8 @@
       "verify_notes": "WhatsApp line (+62 813-2952-0052). Confirm it is still active and 24 hours."
     },
     {
-      "title": "Ruang Cerita — Unit Layanan Kesehatan Mental UGM",
-      "description": "Skrining kesehatan mental dan konseling untuk seluruh mahasiswa UGM. Booking jadwal lewat tautan ini, atau chat WhatsApp +62 822-6424-4767.",
+      "title": "Ruang Cerita — UGM Mental Health Service Unit",
+      "description": "Mental health screening and counselling for all UGM students. Book a slot through this link, or chat on WhatsApp +62 822-6424-4767.",
       "phone": null,
       "url": "https://ugm.id/SkriningAwalRC",
       "type": "counselling",
@@ -26,8 +26,8 @@
       "verify_notes": "Check the booking link opens and the WhatsApp number (+62 822-6424-4767) replies."
     },
     {
-      "title": "Poli Psikologi — Klinik GMC UGM",
-      "description": "Konsultasi psikolog gratis untuk seluruh sivitas UGM. Senin–Sabtu 07.30–19.00. Daftar lewat WhatsApp.",
+      "title": "Psychology Clinic — GMC UGM Clinic",
+      "description": "Free psychologist consultations for the whole UGM community. Monday to Saturday, 07:30–19:00. Register via WhatsApp.",
       "phone": null,
       "url": "https://wa.me/6281326200342",
       "type": "counselling",
@@ -38,8 +38,8 @@
       "verify_notes": "WhatsApp +62 813-2620-0342. Hours and 'free for all UGM' are from ugm.ac.id."
     },
     {
-      "title": "Unit Konsultasi Psikologi (UKP) — Fakultas Psikologi UGM",
-      "description": "Layanan konsultasi psikologi. Fakultas Psikologi UGM, Gedung D lantai 2. Telepon (0274) 550435 ext. 131, email ukp.psikologi@ugm.ac.id.",
+      "title": "Psychology Consultation Unit (UKP) — UGM Faculty of Psychology",
+      "description": "Psychology consultation service. UGM Faculty of Psychology, Building D, 2nd floor. Phone (0274) 550435 ext. 131, email ukp.psikologi@ugm.ac.id.",
       "phone": "+62 821-3768-0588",
       "url": "https://ukp.psikologi.ugm.ac.id/",
       "type": "counselling",
@@ -51,7 +51,7 @@
     },
     {
       "title": "FT UGM Wellbeing Center",
-      "description": "Konsultasi psikolog gratis untuk mahasiswa Fakultas Teknik UGM. Gedung SGLC lantai 2, hari kerja. Daftar lewat tautan ini.",
+      "description": "Free psychologist consultations for UGM Faculty of Engineering students. SGLC building, 2nd floor, weekdays. Register through this link.",
       "phone": "+62 813-9173-7076",
       "url": "https://ugm.id/KKMFT",
       "type": "counselling",
@@ -62,8 +62,8 @@
       "verify_notes": "Number conflict: the 2024 FT article gives +62 813-9173-7076; ft.ugm.ac.id/konseling-psikologi shows the general 'Layanan Terpadu' WA +62 852-9099-4065. Confirm which reaches counselling."
     },
     {
-      "title": "Layanan Darurat Kampus UGM (PK4L)",
-      "description": "Jika ada bahaya atau kejadian darurat SEKARANG di lingkungan kampus. Dari telepon kampus: 1234.",
+      "title": "UGM Campus Emergency Service (PK4L)",
+      "description": "If there is danger or an emergency on campus RIGHT NOW. From a campus phone: 1234.",
       "phone": "(0274) 649-1234",
       "url": "https://pk4l.ugm.ac.id/",
       "type": "crisis",
@@ -74,8 +74,8 @@
       "verify_notes": "For incidents happening now, not for past complaints."
     },
     {
-      "title": "Healing119 — Kementerian Kesehatan RI",
-      "description": "Layanan konseling kesehatan jiwa nasional, gratis. Telepon 119 lalu tekan 8, atau chat lewat WhatsApp di situs ini.",
+      "title": "Healing119 — Indonesian Ministry of Health",
+      "description": "National mental health counselling service, free. Call 119 then press 8, or chat on WhatsApp via this site.",
       "phone": null,
       "url": "https://www.healing119.id/",
       "type": "crisis",

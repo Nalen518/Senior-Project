@@ -19,11 +19,11 @@ const { toLocalDate, addDays } = require('../src/logic/checkDate');
 // 28 days, oldest first: a normal fortnight, an exam-week dip, then recovery.
 const MOODS = [4, 4, 3, 4, 5, 4, 3, 4, 3, 4, 4, 3, 4, 4, 3, 2, 2, 1, 2, 3, 3, 3, 4, 3, 4, 4, 5, 4];
 const NOTES = {
-  15: 'Minggu ujian mulai, tugas numpuk.',
-  16: 'Kurang tidur, begadang belajar.',
-  17: 'Capek banget, rasanya sendirian ngerjain semuanya.',
-  19: 'Ujian selesai satu, sedikit lega.',
-  26: 'Jalan sore sama teman, lebih baik.',
+  15: 'Exam week is starting and the assignments are piling up.',
+  16: 'Barely slept, stayed up studying.',
+  17: 'So tired, it feels like I am doing everything alone.',
+  19: 'One exam done, a bit relieved.',
+  26: 'Evening walk with a friend, feeling better.',
 };
 
 async function main() {
