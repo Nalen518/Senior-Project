@@ -48,17 +48,22 @@ function createNoteAnalyses(db) {
       await db.query('DELETE FROM note_analyses WHERE checkin_id = $1', [checkinId]);
     },
 
-    /** Distinct theme codes from completed analyses since a WIB date. */
-    async recentThemeCodes(userId, fromDate) {
+    /**
+     * Most frequent theme codes from completed analyses since a WIB date (FR-13).
+     * Ties are broken alphabetically so the order is stable.
+     */
+    async recentThemeCodes(userId, fromDate, limit = 3) {
       const { rows } = await db.query(
-        `SELECT DISTINCT t.code
+        `SELECT t.code, COUNT(*) AS uses
            FROM checkins c
            JOIN note_analyses a ON a.checkin_id = c.id AND a.status = 'done'
            JOIN analysis_themes at ON at.analysis_id = a.id
            JOIN themes t ON t.id = at.theme_id
           WHERE c.user_id = $1 AND c.check_date >= $2::date
-          ORDER BY t.code`,
-        [userId, fromDate],
+          GROUP BY t.code
+          ORDER BY uses DESC, t.code
+          LIMIT $3`,
+        [userId, fromDate, limit],
       );
       return rows.map((r) => r.code);
     },
