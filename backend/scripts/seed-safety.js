@@ -44,9 +44,9 @@ async function main() {
     await client.query('DELETE FROM resources');
     for (const r of resources.resources) {
       const { rows } = await client.query(
-        `INSERT INTO resources (title, description, url, phone, type, is_primary_crisis, sort_order, verified_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-        [r.title, r.description, r.url, r.phone, r.type, r.is_primary_crisis, r.sort_order, r.verified_at],
+        `INSERT INTO resources (title, description, url, phone, type, is_primary_crisis, sort_order, verified_at, faculty)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+        [r.title, r.description, r.url, r.phone, r.type, r.is_primary_crisis, r.sort_order, r.verified_at, r.faculty],
       );
       if (r.tags.length > 0) {
         await client.query(

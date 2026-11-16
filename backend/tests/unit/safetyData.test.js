@@ -2,7 +2,9 @@
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { validateKeywords, validateResources } = require('../../scripts/lib/safetyData');
+const fs = require('node:fs');
+const path = require('node:path');
+const { validateKeywords, validateResources, FACULTY_CODES } = require('../../scripts/lib/safetyData');
 const { toResource } = require('../../src/models/resources');
 
 describe('toResource (how contacts reach the support screen)', () => {
@@ -76,5 +78,35 @@ describe('validateResources', () => {
     assert.ok(kw.errors.length > 0, 'draft keyword list must not load before review');
     assert.ok(kw.phrases.length > 0);
     assert.ok(res.errors.every((e) => /verified_at/.test(e)), `only verification should be missing: ${res.errors.join(' | ')}`);
+  });
+});
+
+describe('faculty codes', () => {
+  const ok = { title: 'T', description: 'D', url: 'https://x', type: 'counselling', verified_at: '2026-11-16', tags: [] };
+
+  test('a known faculty on a counselling service is kept', () => {
+    const { resources, errors } = validateResources({ resources: [{ ...ok, faculty: 'engineering' }] }, []);
+    assert.deepEqual(errors, []);
+    assert.equal(resources[0].faculty, 'engineering');
+  });
+
+  test('missing faculty means UGM-wide (null)', () => {
+    assert.equal(validateResources({ resources: [ok] }, []).resources[0].faculty, null);
+  });
+
+  test('unknown faculty, or a faculty on a non-counselling entry, is refused', () => {
+    assert.match(validateResources({ resources: [{ ...ok, faculty: 'astrology' }] }, []).errors.join(), /unknown faculty/);
+    assert.match(validateResources({ resources: [{ ...ok, type: 'crisis', faculty: 'law' }] }, []).errors.join(), /only counselling/);
+  });
+
+  test('backend list matches FacultyCode in shared/contract.ts', () => {
+    const ts = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'shared', 'contract.ts'), 'utf8');
+    const union = ts.match(/export type FacultyCode =([^;]+);/)[1];
+    assert.deepEqual([...union.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).sort(), [...FACULTY_CODES].sort());
+  });
+
+  test('every faculty in data/resources.json is valid', () => {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'resources.json'), 'utf8'));
+    for (const r of data.resources) if (r.faculty) assert.ok(FACULTY_CODES.includes(r.faculty), r.faculty);
   });
 });

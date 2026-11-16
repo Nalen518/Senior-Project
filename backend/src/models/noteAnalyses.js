@@ -67,6 +67,18 @@ function createNoteAnalyses(db) {
       );
       return rows.map((r) => r.code);
     },
+
+    /** How many of the user's notes since a WIB date the LLM labelled negative. */
+    async negativeCountSince(userId, fromDate) {
+      const { rows } = await db.query(
+        `SELECT COUNT(*)::int AS n
+           FROM checkins c
+           JOIN note_analyses a ON a.checkin_id = c.id AND a.status = 'done' AND a.sentiment = 'negative'
+          WHERE c.user_id = $1 AND c.check_date >= $2::date`,
+        [userId, fromDate],
+      );
+      return rows[0].n;
+    },
   };
 }
 

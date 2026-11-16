@@ -51,6 +51,15 @@ function createCheckins(db) {
       );
       return rows;
     },
+
+    /** True when the user has a crisis-flagged check-in on or after a WIB date. */
+    async hasCrisisSince(userId, fromDate) {
+      const { rows } = await db.query(
+        'SELECT EXISTS (SELECT 1 FROM checkins WHERE user_id = $1 AND check_date >= $2::date AND crisis_flag) AS found',
+        [userId, fromDate],
+      );
+      return rows[0].found;
+    },
   };
 }
 

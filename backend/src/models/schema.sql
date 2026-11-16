@@ -77,6 +77,7 @@ CREATE TABLE resources (
     type               resource_type NOT NULL,
     is_primary_crisis  BOOLEAN       NOT NULL DEFAULT false, -- shown first on the crisis screen
     sort_order         SMALLINT      NOT NULL DEFAULT 0,
+    faculty            TEXT          CHECK (faculty ~ '^[a-z_]+$'), -- NULL = UGM-wide, else that faculty's students only
     active             BOOLEAN       NOT NULL DEFAULT true,
     verified_at        DATE,                                  -- when the team last confirmed the contact
     created_at         TIMESTAMPTZ   NOT NULL DEFAULT now(),
