@@ -57,7 +57,7 @@ CREATE TABLE note_analyses (
 CREATE TABLE themes (
     id        SMALLSERIAL PRIMARY KEY,
     code      TEXT NOT NULL UNIQUE,    -- used in API as themes[] / tags[]
-    label_id  TEXT NOT NULL            -- Indonesian display label
+    label     TEXT NOT NULL            -- English display label
 );
 
 -- analyses <-> themes (many-to-many)
@@ -101,15 +101,15 @@ CREATE TABLE crisis_keywords (
 );
 
 -- ---------- Reference data: theme vocabulary ----------
-INSERT INTO themes (code, label_id) VALUES
-    ('sleep',      'Tidur'),
-    ('workload',   'Beban tugas'),
-    ('exams',      'Ujian'),
-    ('isolation',  'Merasa sendiri'),
-    ('relationships', 'Hubungan'),
-    ('finance',    'Keuangan'),
-    ('health',     'Kesehatan fisik'),
-    ('motivation', 'Motivasi');
+INSERT INTO themes (code, label) VALUES
+    ('sleep',      'Sleep'),
+    ('workload',   'Workload'),
+    ('exams',      'Exams'),
+    ('isolation',  'Feeling isolated'),
+    ('relationships', 'Relationships'),
+    ('finance',    'Finances'),
+    ('health',     'Physical health'),
+    ('motivation', 'Motivation');
 
 -- Resources and crisis keywords are NOT seeded here on purpose:
 -- the team must verify every contact on the official UGM page before inserting it,
