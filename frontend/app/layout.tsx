@@ -1,4 +1,9 @@
 import type { Metadata } from "next";
+
+
+import { OfflineExperience } from "@/components/UI/OfflineExperience";
+import { WelcomeGate } from "@/components/UI/WelcomeGate";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 
@@ -23,7 +28,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <WelcomeGate />
+        {children}
+      </body>
     </html>
   );
 }

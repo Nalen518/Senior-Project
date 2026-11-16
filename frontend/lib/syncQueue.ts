@@ -26,6 +26,9 @@ export function readQueue(): SyncQueue {
 
 function writeQueue(queue: SyncQueue): void {
   localStorage.setItem(KEY, JSON.stringify(queue));
+
+  // Notify this tab so the dashboard can refresh its pending count.
+  window.dispatchEvent(new Event("mindmeter:queue-change"));
 }
 
 /** What the check-in screen gets back. */

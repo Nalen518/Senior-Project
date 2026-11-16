@@ -2,22 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { offlineSupportResources } from "@/constant/offlineSupport";
 
 type Resource = Awaited<ReturnType<typeof api.getResources>>[number];
 
-export const  Hero = () => {
+export const Hero = () => {
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [resourceSource, setResourceSource] = useState<"api" | "offline">(
+    "api",
+  );
 
   useEffect(() => {
     const loadResources = async () => {
       try {
         setResources(await api.getResources());
+        setResourceSource("api");
       } catch {
-        setErrorMessage(
-          "We could not load support contacts right now. Please try again shortly.",
+        setResources(
+          offlineSupportResources.map((resource) => ({
+            id: resource.id,
+            title: resource.title,
+            description: resource.description,
+            url: resource.url,
+            tags: resource.tags,
+          })),
         );
+        setResourceSource("offline");
       } finally {
         setIsLoading(false);
       }
@@ -28,7 +40,6 @@ export const  Hero = () => {
 
   return (
     <>
-
       <main className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-[#1F3347] sm:px-6">
         <div className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full bg-[#E4A79A]" />
         <div className="pointer-events-none absolute right-20 top-24 h-20 w-20 rounded-full bg-[#ECE1BE]" />
@@ -56,6 +67,13 @@ export const  Hero = () => {
               go to the nearest hospital.
             </p>
 
+            {resourceSource === "offline" && (
+              <p className="mt-3 rounded-lg bg-amber-100 px-4 py-3 text-sm text-amber-950">
+                You’re offline. Showing the locally saved support list; contact
+                details may have changed since they were verified.
+              </p>
+            )}
+            
             <div className="mt-3 space-y-2">
               {isLoading && (
                 <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
@@ -74,7 +92,8 @@ export const  Hero = () => {
 
               {!isLoading && !errorMessage && resources.length === 0 && (
                 <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
-                  Support contacts will appear here once they have been verified.
+                  Support contacts will appear here once they have been
+                  verified.
                 </p>
               )}
 
@@ -154,4 +173,4 @@ export const  Hero = () => {
       </main>
     </>
   );
-}
+};

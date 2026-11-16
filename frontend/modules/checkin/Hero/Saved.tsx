@@ -5,11 +5,17 @@ import Link from "next/link";
 
 interface SavedProps {
   isOpen: boolean;
+  title: string;
   message: string;
   onClose: () => void;
 }
 
-export const Saved: React.FC<SavedProps> = ({ isOpen, message, onClose }) => {
+export const Saved: React.FC<SavedProps> = ({
+  isOpen,
+  title,
+  message,
+  onClose,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -22,11 +28,9 @@ export const Saved: React.FC<SavedProps> = ({ isOpen, message, onClose }) => {
         className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl"
       >
         <h3 className="font-serif text-2xl font-bold text-[#1F3347]">
-          Saved for today.
+          {title}
         </h3>
-        <p className="mt-2 text-sm text-gray-600">
-          {message}
-        </p>
+        <p className="mt-2 text-sm text-gray-600">{message}</p>
 
         <div className="mt-6 flex justify-center">
           <Link

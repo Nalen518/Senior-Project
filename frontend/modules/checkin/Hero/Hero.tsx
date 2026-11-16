@@ -24,6 +24,7 @@ export const Hero = () => {
   const [savedMessage, setSavedMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [savedTitle, setSavedTitle] = useState("Check-in saved");
   const maxChars = 200;
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -48,6 +49,7 @@ export const Hero = () => {
       });
 
       if (outcome.kind === "queued") {
+        setSavedTitle("Saved on this device");
         setSavedMessage(
           "Saved on this device. It will be sent when you are back online.",
         );
@@ -60,6 +62,7 @@ export const Hero = () => {
         return;
       }
 
+      setSavedTitle("Check-in saved");
       setSavedMessage(outcome.response.insight);
       setIsSaved(true);
     } catch {
@@ -75,10 +78,10 @@ export const Hero = () => {
     <>
       <section className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-[#1B363A] select-none">
         {/* Background Decorative Circles */}
-        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-[#E3F2F1]/60 -z-0 pointer-events-none" />
-        <div className="absolute right-12 top-20 h-32 w-32 rounded-full bg-[#ECE1BE] -z-0 pointer-events-none" />
-        <div className="absolute left-10 bottom-24 h-40 w-40 rounded-full bg-[#E4A79A]/70 -z-0 pointer-events-none" />
-        <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-[#D8C7E7] -z-0 pointer-events-none" />
+        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-[#E3F2F1]/60 z-0 pointer-events-none" />
+        <div className="absolute right-12 top-20 h-32 w-32 rounded-full bg-[#ECE1BE] z-0 pointer-events-none" />
+        <div className="absolute left-10 bottom-24 h-40 w-40 rounded-full bg-[#E4A79A]/70 z-0 pointer-events-none" />
+        <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-[#D8C7E7] z-0 pointer-events-none" />
 
         {/* Main Container */}
         <div className="relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
@@ -237,6 +240,7 @@ export const Hero = () => {
 
       <Saved
         isOpen={isSaved}
+        title={savedTitle}
         message={savedMessage}
         onClose={() => setIsSaved(false)}
       />

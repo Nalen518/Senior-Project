@@ -1,10 +1,10 @@
 import { Navbar } from "@/components/layout/Navbar";
-
-export default async function Home() {
+import { Hero } from "@/modules/about/index";
+export default async function About() {
   return (
     <>
       <Navbar />
-      Dashboard
+      <Hero />
     </>
   );
 }

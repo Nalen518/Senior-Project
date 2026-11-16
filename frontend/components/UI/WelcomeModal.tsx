@@ -73,6 +73,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 
           <Link
             href="/support"
+            onClick={onClose}
             className="w-full rounded-xl border border-gray-300 bg-white py-2.5 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-gray-50"
           >
             See support contacts

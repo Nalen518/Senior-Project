@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // Support contacts and self-help resources, returned in the contract's Resource shape:
 // { id, title, description, url, tags }.
@@ -6,14 +6,21 @@
 // Crisis contacts (and the primary crisis contact) prefer the phone: in a crisis the student
 // should get a number to call, not a website. Other resources prefer their website.
 
-const telLink = (phone) => `tel:${phone.replace(/[^\d+]/g, '')}`;
+const telLink = (phone) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
 const toResource = (row) => {
-  const phoneFirst = row.is_primary_crisis || row.type === 'crisis';
+  const phoneFirst = row.is_primary_crisis || row.type === "crisis";
   let url;
   if (phoneFirst) url = row.phone ? telLink(row.phone) : row.url;
   else url = row.url || telLink(row.phone);
-  return { id: row.id, title: row.title, description: row.description, url, tags: row.tags || [] };
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    url,
+    //type: row.type,
+    tags: row.tags || [],
+  };
 };
 
 const SELECT = `
@@ -24,7 +31,7 @@ const SELECT = `
     LEFT JOIN themes t ON t.id = rt.theme_id
    WHERE r.active`;
 
-const ORDER = 'ORDER BY r.is_primary_crisis DESC, r.sort_order, r.title';
+const ORDER = "ORDER BY r.is_primary_crisis DESC, r.sort_order, r.title";
 
 function createResources(db) {
   return {
