@@ -136,7 +136,7 @@ Priority: **M** Must · **S** Should · **C** Could. Each has acceptance criteri
 | FR-01 | M | **One-tap check-in.** User selects a mood 1–5 from the home screen and it is saved. | AC: 1 tap saves; confirmation shown in < 1 s perceived; works with no note. |
 | FR-02 | M | **Optional note** up to 200 characters. | AC: counter shown; 201st char blocked in UI and rejected `400` by API; empty note allowed. |
 | FR-03 | M | **One check-in per day.** A second check-in on the same Jakarta date updates the first. | AC: two POSTs same day → one row; API returns 200 both times with the same `id`. |
-| FR-04 | M | **Anonymous identity** via browser token; no name/email/demographics. | AC: no PII fields in DB/API; token stored hashed (SHA-256); app works with no sign-in. |
+| FR-04 | M | **Anonymous identity** via browser token; no name/email/demographics. | AC: no PII fields in DB/API; token stored hashed (SHA-256); app works with no sign-in. An optional faculty choice stays in the browser and is never sent to the API. |
 | FR-05 | M | **Crisis detection before AI.** Backend keyword check on every note, before any LLM call. | AC: crisis phrase → `crisis_flag: true`, LLM not called, covered by unit tests for English and Indonesian variants (users may write in either). |
 | FR-06 | M | **Crisis screen.** When `crisis_flag` is true the FE shows a full-screen support view immediately. | AC: shows verified contacts first; one tap to call/open; cannot be dismissed accidentally by the check-in confirmation. |
 | FR-07 | M | **Always-visible support entry** on every screen. | AC: visible without scrolling at desktop width (1280 px and up) on all routes, including offline. The 360 px check moves to the mobile phase. |
@@ -146,6 +146,7 @@ Priority: **M** Must · **S** Should · **C** Could. Each has acceptance criteri
 | FR-11 | M | **Offline queue and sync.** Check-ins made offline are stored locally and synced idempotently when back online. | AC: airplane-mode test: 3 taps queued → reconnect → 3 rows, no duplicates, replay twice safe. |
 | FR-12 | S | **LLM note analysis** (sentiment + themes from a fixed theme list) via OpenRouter, asynchronous, JSON only. | AC: output validated against schema; invalid/timeout → status `failed`, no user-visible error; check-in always saved. |
 | FR-13 | S | **Themes on dashboard** (top ≤ 3 over 14 days). | AC: shown only when analyses are `done`; hidden gracefully otherwise. |
+| FR-17 | S | **Help card with booking pointer.** Dashboard shows a short pre-written help message chosen by fixed rules from the trend and LLM labels, plus counselling services to book, the student's own faculty first. | AC: no LLM-written text shown; booking pointer always present when verified contacts exist; direct wording when support is needed or ≥ 3 negative notes in 14 days; reach-out message after a crisis check-in; faculty never sent to the API. |
 | FR-14 | M | **Demo seed account** with ~4 weeks of varied data (incl. an improving and a declining stretch). | AC: demo token shows a populated dashboard instantly; seed contains invented notes only. |
 | FR-15 | M | **Disclaimer & framing.** App states it is reflection and signposting, not medical advice. | AC: visible on first use and in the footer/about; no diagnostic language anywhere. |
 | FR-16 | C | Data deletion by user (`DELETE /api/me`). | Decision pending; see API-CONTRACT §9; not in the frozen contract, would need a `contract-change` PR. |
@@ -160,7 +161,7 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 | NFR-02 | Availability | Demo-week uptime target 99% (best effort on tier used); `/health` monitored. App remains usable offline for check-in and support. |
 | NFR-03 | Security | HTTPS only; input validated server-side; rate limit 60/min/IP; CORS allowlist; secure HTTP headers (e.g. Helmet); parameterized queries; secrets only in App Service settings/GitHub secrets; dependency audit in CI. |
 | NFR-04 | Privacy | No PII; token hashed; notes ≤ 200 chars; **no note text, tokens or hashes in logs**; notes sent to the LLM only when not crisis-flagged, with no identifiers attached; no real student notes in tests/seeds. |
-| NFR-05 | Safety | Crisis logic deterministic and tested first; support always visible; LLM output never shown as advice, only used for theme labels. |
+| NFR-05 | Safety | Crisis logic deterministic and tested first; support always visible; LLM output never shown to students: it only produces validated labels (sentiment, themes). Help text is pre-written and chosen by fixed rules (FR-17); the LLM can make the booking wording stronger but never remove it or override the crisis path. |
 | NFR-06 | Usability / accessibility | One-tap core action; tap targets ≥ 44 px; WCAG AA contrast; usable with screen reader labels on mood buttons; calm, uncluttered, non-clinical tone. |
 | NFR-07 | Reliability | Idempotent sync; DB constraints enforce one check-in per user per day; LLM failure never blocks saving. |
 | NFR-08 | Maintainability | Shared TS contract; CI (lint, types, tests, build); docs updated with code; thresholds/config in one file. |
@@ -199,7 +200,7 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 | Problem/solution (10%) | Student wellbeing problem, privacy-first low-friction solution, B2B-to-university narrative | §1, FR-01, FR-07, FR-15 |
 | Networking (20%) | REST/HTTPS contract, CORS, rate limit, offline queue + idempotent sync, latency evidence | FR-11, NFR-01, NFR-03, API-CONTRACT §1, §5.3 |
 | Cloud (20%) | Azure App Service + PostgreSQL, health check, secrets, CI/CD, seeded demo | NFR-02, NFR-03, NFR-10, FR-14 |
-| AI (20%) | Rule-based trends (baseline) + LLM themes with validation and fallback | FR-09, FR-12, FR-13 |
+| AI (20%) | Rule-based trends (baseline) + LLM themes with validation and fallback + guardrailed help card (LLM labels in, pre-written text out) | FR-09, FR-12, FR-13, FR-17 |
 | Smooth demo (5%) | Demo account, rehearsed script, offline demo, health pre-flight | FR-14, PROJECT-PLAN W8 |
 | Process (50%: Git docs 20%, quizzes 20%) | PR rules, weekly milestones, tags, issue history | PR-RULES, PROJECT-PLAN |
 

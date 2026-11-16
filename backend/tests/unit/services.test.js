@@ -91,19 +91,68 @@ describe('insightService themes (FR-13)', () => {
       config: { timeZone: 'Asia/Jakarta' },
       clock: () => new Date('2026-09-28T13:00:00Z'), // 20:00 WIB on 28 Sep
       models: {
-        checkins: { moodsSince: async () => [] },
+        checkins: { moodsSince: async () => [], hasCrisisSince: async () => false },
         noteAnalyses: {
           recentThemeCodes: async (userId, fromDate, limit) => {
             calls.themes = { userId, fromDate, limit };
             return ['exams', 'sleep'];
           },
+          negativeCountSince: async () => 0,
         },
-        resources: { match: async (args) => ((calls.match = args), []) },
+        resources: { match: async (args) => ((calls.match = args), []), bookingOptions: async () => [] },
       },
     });
     const res = await service.getInsight('u1');
     assert.deepEqual(calls.themes, { userId: 'u1', fromDate: '2026-09-15', limit: 3 });
     assert.deepEqual(calls.match, { themeCodes: ['exams', 'sleep'], needsSupport: false });
     assert.deepEqual(res.themes, ['exams', 'sleep']);
+  });
+});
+
+describe('insightService help card', () => {
+  const booking = { id: 'r1', title: 'Ruang Cerita', description: 'D', url: 'https://x', tags: [], faculty: null };
+  const make = ({ crisis = false, negative = 0, options = [booking], themes = ['sleep'] } = {}) => {
+    const calls = {};
+    const service = createInsightService({
+      config: { timeZone: 'Asia/Jakarta' },
+      clock: () => new Date('2026-09-28T13:00:00Z'),
+      models: {
+        checkins: {
+          moodsSince: async () => [],
+          hasCrisisSince: async (userId, from) => ((calls.crisisFrom = from), crisis),
+        },
+        noteAnalyses: { recentThemeCodes: async () => themes, negativeCountSince: async () => negative },
+        resources: { match: async (args) => ((calls.match = args), []), bookingOptions: async () => options },
+      },
+    });
+    return { service, calls };
+  };
+
+  test('theme tip, soft booking pointer and every booking option', async () => {
+    const res = await make().service.getInsight('u1');
+    assert.equal(res.help.suggest_booking, false);
+    assert.match(res.help.message, /^Sleep came up/);
+    assert.deepEqual(res.help.booking_options, [booking]);
+  });
+
+  test('several negative notes make the booking suggestion direct', async () => {
+    const res = await make({ negative: 3 }).service.getInsight('u1');
+    assert.equal(res.help.suggest_booking, true);
+    assert.match(res.help.message, /talk this through with a counsellor/);
+  });
+
+  test('recent crisis check-in: reach-out message, support contacts matched, same 14-day window', async () => {
+    const { service, calls } = make({ crisis: true });
+    const res = await service.getInsight('u1');
+    assert.match(res.help.message, /^Please reach out/);
+    assert.equal(calls.match.needsSupport, true);
+    assert.equal(calls.crisisFrom, '2026-09-15');
+  });
+
+  test('no verified booking contacts yet: still a useful message, empty options', async () => {
+    const res = await make({ options: [] }).service.getInsight('u1');
+    assert.equal(res.help.suggest_booking, false);
+    assert.match(res.help.message, /Support page/);
+    assert.deepEqual(res.help.booking_options, []);
   });
 });

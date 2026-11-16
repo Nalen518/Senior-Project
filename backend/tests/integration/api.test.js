@@ -61,7 +61,11 @@ describe('MindMeter API', { skip }, () => {
       INSERT INTO resources (title, description, url, type, sort_order)
         VALUES ('Tips tidur (uji)', 'Sumber uji', 'https://example.org/tidur', 'self_help', 1);
       INSERT INTO resource_themes (resource_id, theme_id)
-        SELECT r.id, t.id FROM resources r, themes t WHERE r.title = 'Tips tidur (uji)' AND t.code = 'sleep';`);
+        SELECT r.id, t.id FROM resources r, themes t WHERE r.title = 'Tips tidur (uji)' AND t.code = 'sleep';
+      INSERT INTO resources (title, description, url, type, sort_order)
+        VALUES ('Konseling UGM (uji)', 'Sumber uji', 'https://example.org/ugm', 'counselling', 2);
+      INSERT INTO resources (title, description, url, type, sort_order, faculty)
+        VALUES ('Konseling FT (uji)', 'Sumber uji', 'https://example.org/ft', 'counselling', 3, 'engineering');`);
 
     const config = {
       timeZone: 'Asia/Jakarta',
@@ -149,10 +153,25 @@ describe('MindMeter API', { skip }, () => {
   test('GET /api/insights returns trend, message, themes from Stage 2, matched resources', async () => {
     const res = await call('GET', '/api/insights');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body).sort(), ['message', 'resources', 'themes', 'trend']);
+    assert.deepEqual(Object.keys(res.body).sort(), ['help', 'message', 'resources', 'themes', 'trend']);
     assert.ok(['stable', 'declining', 'improving'].includes(res.body.trend));
     assert.deepEqual(res.body.themes, ['sleep', 'workload']);
     assert.equal(res.body.resources[0].title, 'Tips tidur (uji)');
+  });
+
+  test('GET /api/insights help card: pre-written message, UGM-wide and faculty booking options', async () => {
+    const { help } = (await call('GET', '/api/insights')).body;
+    assert.deepEqual(Object.keys(help).sort(), ['booking_options', 'message', 'suggest_booking']);
+    assert.match(help.message, /^Sleep came up in your notes\./);
+    assert.deepEqual(help.booking_options.map((r) => [r.title, r.faculty]),
+      [['Konseling UGM (uji)', null], ['Konseling FT (uji)', 'engineering']]);
+  });
+
+  test('GET /api/insights after a crisis check-in: reach-out message, crisis contact first', async () => {
+    const res = await call('GET', '/api/insights', { token: OTHER_TOKEN });
+    assert.match(res.body.help.message, /^Please reach out/);
+    assert.equal(res.body.help.suggest_booking, true);
+    assert.equal(res.body.resources[0].title, 'Kontak krisis (uji)');
   });
 
   test('GET /api/resources works WITHOUT a token: support is always reachable', async () => {
@@ -164,9 +183,15 @@ describe('MindMeter API', { skip }, () => {
   test('GET /api/resources: primary crisis contact first, phone as tel: link', async () => {
     const res = await call('GET', '/api/resources');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'id', 'tags', 'title', 'url']);
+    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'faculty', 'id', 'tags', 'title', 'url']);
     assert.equal(res.body[0].url, 'tel:+620000000');
     assert.deepEqual(res.body[1].tags, ['sleep']);
+  });
+
+  test('GET /api/resources leaves out faculty-only services (they would turn other students away)', async () => {
+    const res = await call('GET', '/api/resources');
+    assert.ok(res.body.every((r) => r.faculty === null));
+    assert.equal(res.body.some((r) => r.title === 'Konseling FT (uji)'), false);
   });
 
   // Rule 4 of the development plan: the backend (JavaScript) must match shared/contract.ts exactly.

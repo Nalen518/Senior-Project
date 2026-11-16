@@ -1,5 +1,5 @@
 {
-  "_readme": "Support contacts shown on the support/crisis screen. Every entry in `resources` needs verified_at (YYYY-MM-DD): the date a teammate opened the source link or sent a WhatsApp message and confirmed the contact still works. npm run db:seed-safety refuses to load entries without it. Exactly one entry may have is_primary_crisis: true (shown first). type: crisis | counselling | self_help. tags: theme codes (sleep, workload, exams, isolation, relationships, finance, health, motivation). Crisis contacts return `phone` as a tel: link before `url`, so WhatsApp-only lines must use a wa.me link in `url` and phone: null. `verify_notes` is for the verifier and is not loaded. Research gathered 2026-10-17.",
+  "_readme": "Support contacts shown on the support/crisis screen. Every entry in `resources` needs verified_at (YYYY-MM-DD): the date a teammate opened the source link or sent a WhatsApp message and confirmed the contact still works. npm run db:seed-safety refuses to load entries without it. Exactly one entry may have is_primary_crisis: true (shown first). type: crisis | counselling | self_help. tags: theme codes (sleep, workload, exams, isolation, relationships, finance, health, motivation). Crisis contacts return `phone` as a tel: link before `url`, so WhatsApp-only lines must use a wa.me link in `url` and phone: null. faculty: optional faculty code (counselling only, see FacultyCode in shared/contract.ts), null = all UGM students. `verify_notes` is for the verifier and is not loaded. Research gathered 2026-10-17.",
   "resources": [
     {
       "title": "MHERL — UGM Mental Health Emergency Response Line (24 hours)",
@@ -59,7 +59,8 @@
       "tags": ["workload", "exams", "isolation"],
       "verified_at": "",
       "source": "https://ft.ugm.ac.id/ft-ugm-sediakan-layanan-konsultasi-karir-dan-kesehatan-mental/ and https://hpu.ugm.ac.id/info-layanan/",
-      "verify_notes": "Number conflict: the 2024 FT article gives +62 813-9173-7076; ft.ugm.ac.id/konseling-psikologi shows the general 'Layanan Terpadu' WA +62 852-9099-4065. Confirm which reaches counselling."
+      "verify_notes": "Number conflict: the 2024 FT article gives +62 813-9173-7076; ft.ugm.ac.id/konseling-psikologi shows the general 'Layanan Terpadu' WA +62 852-9099-4065. Confirm which reaches counselling.",
+      "faculty": "engineering"
     },
     {
       "title": "UGM Campus Emergency Service (PK4L)",
@@ -84,31 +85,176 @@
       "verified_at": "",
       "source": "https://kesprimkom.kemkes.go.id/konten/158/151/0/cegah-bunuh-diri-dukung-kesehatan-jiwa-kenali-layanan-healing119-id",
       "verify_notes": "Do NOT put 119 in phone: a tel:119 link dials the ambulance line, not extension 8. Kemenkes says 'pagi hingga malam' (not 24/7)."
+    },
+    {
+      "title": "Faculty of Biology Counselling Service",
+      "description": "Psychological counselling for Faculty of Biology students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/konselingbiologi",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "biology",
+      "verified_at": "",
+      "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Economics and Business (FEB) Counselling Service",
+      "description": "Psychological counselling for Faculty of Economics and Business (FEB) students. Register through this link.",
+      "phone": null,
+      "url": "https://wa.me/628112843884",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "economics_business",
+      "verified_at": "",
+      "verify_notes": "Source: https://karir.feb.ugm.ac.id/konsultasi-psikologi/. Registration is via SINTESIS portal academics.feb.ac.id/portalmhs (menu Konsultasi), so the WhatsApp line is used here. Page also links wa.me/628112975295 as 'Hubungi Kami'; confirm which is current. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Pharmacy Counselling Service",
+      "description": "Psychological counselling for Faculty of Pharmacy students. Register through this link.",
+      "phone": null,
+      "url": "http://bit.ly/konseling-farmasi",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "pharmacy",
+      "verified_at": "",
+      "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Law Counselling Service",
+      "description": "Psychological counselling for Faculty of Law students. Register through this link.",
+      "phone": null,
+      "url": "https://bit.ly/DaftarKonselingHPUFHUGM",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "law",
+      "verified_at": "",
+      "verify_notes": "Source: https://law.ugm.ac.id/en/bisa-konseling-gratis-fakultas-hukum-universitas-gadjah-mada-buka-layanan-dukungan-psikologis/. WhatsApp +62 821-3617-5361. 4 free sessions per semester (2024 article). Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Social and Political Sciences (Fisipol) Counselling Service",
+      "description": "Psychological counselling for Faculty of Social and Political Sciences (Fisipol) students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/KonselingFISIPOLUGM",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "social_political_sciences",
+      "verified_at": "",
+      "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Fisipol CDC page is from 2018; use the HPU link. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Medicine, Public Health and Nursing (FK-KMK) Counselling Service",
+      "description": "Psychological counselling for Faculty of Medicine, Public Health and Nursing (FK-KMK) students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/daftarkonselingfkkmk",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "medicine_public_health_nursing",
+      "verified_at": "",
+      "verify_notes": "Source: https://fkkmk.ugm.ac.id/layanan-psikologi/. WhatsApp 0811-2570-027. Page last updated 2023. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Dentistry (FKG) Counselling Service",
+      "description": "Psychological counselling for Faculty of Dentistry (FKG) students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/HPUSenyumMental",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "dentistry",
+      "verified_at": "",
+      "verify_notes": "Source: https://fkg.ugm.ac.id/fkg-ugm-sediakan-layanan-konsultasi-psikologi-guna-dukung-kesehatan-mental/. Free, started May 2026. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Mathematics and Natural Sciences (FMIPA) Counselling Service",
+      "description": "Psychological counselling for Faculty of Mathematics and Natural Sciences (FMIPA) students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/KonselingHPUFMIPA",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "mathematics_natural_sciences",
+      "verified_at": "",
+      "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Faculty of Agriculture Counselling Service",
+      "description": "Psychological counselling for Faculty of Agriculture students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/individualcounselingfapertaugm",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "agriculture",
+      "verified_at": "",
+      "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. WhatsApp +62 811-368-875. WhatsApp is the faculty's HPU call centre (earlier Faperta article). Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Vocational College (SV) Counselling Service",
+      "description": "Psychological counselling for Vocational College (SV) students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/PendaftaranKonselingSV",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "vocational_college",
+      "verified_at": "",
+      "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
+    },
+    {
+      "title": "Graduate School (SPs) Counselling Service",
+      "description": "Psychological counselling for Graduate School (SPs) students. Register through this link.",
+      "phone": null,
+      "url": "http://ugm.id/LayananKonsultasiPsikologSPs",
+      "type": "counselling",
+      "is_primary_crisis": false,
+      "tags": [],
+      "faculty": "graduate_school",
+      "verified_at": "",
+      "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
     }
   ],
   "faculty_directory": {
-    "_readme": "NOT loaded into the app. Faculty services mostly serve only their own faculty's students, so showing all of them to everyone would send students to services that turn them away. Kept for a future 'pick your faculty' feature (needs a faculty column in resources + a contract change). Main source: https://hpu.ugm.ac.id/info-layanan/ (UGM's own directory). Gathered 2026-10-17; verify before use.",
+    "_readme": "NOT loaded into the app. Faculty counselling services with a registration link now live in `resources` with a `faculty` code and are only offered as booking options to that faculty's students. What is left here has no usable link or serves one department only. Main source: https://hpu.ugm.ac.id/info-layanan/ (UGM's own directory). Gathered 2026-10-17; verify before use.",
     "counselling": [
-      { "faculty": "Biologi", "register": "http://ugm.id/konselingbiologi", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Ekonomika dan Bisnis (FEB)", "register": "SINTESIS portal academics.feb.ac.id/portalmhs (menu Konsultasi)", "whatsapp": "0811-2843-884", "email": "swpdc.feb@ugm.ac.id", "source": "https://karir.feb.ugm.ac.id/konsultasi-psikologi/", "note": "Page also links wa.me/628112975295 as 'Hubungi Kami'; confirm which is current." },
-      { "faculty": "Farmasi", "register": "http://bit.ly/konseling-farmasi", "instagram": "@plpfarmasiugm", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Hukum", "register": "https://bit.ly/DaftarKonselingHPUFHUGM", "whatsapp": "+62 821-3617-5361", "source": "https://law.ugm.ac.id/en/bisa-konseling-gratis-fakultas-hukum-universitas-gadjah-mada-buka-layanan-dukungan-psikologis/", "note": "4 free sessions per semester (2024 article)." },
-      { "faculty": "Ilmu Sosial dan Politik (Fisipol)", "register": "http://ugm.id/KonselingFISIPOLUGM", "source": "https://hpu.ugm.ac.id/info-layanan/", "note": "Fisipol CDC page is from 2018; use the HPU link." },
-      { "faculty": "Kedokteran, Kesehatan Masyarakat, dan Keperawatan (FK-KMK)", "register": "http://ugm.id/daftarkonselingfkkmk", "whatsapp": "0811-2570-027", "instagram": "@konselingfkkmkugm", "source": "https://fkkmk.ugm.ac.id/layanan-psikologi/", "note": "Page last updated 2023." },
-      { "faculty": "Kedokteran Gigi (FKG)", "register": "http://ugm.id/HPUSenyumMental", "source": "https://fkg.ugm.ac.id/fkg-ugm-sediakan-layanan-konsultasi-psikologi-guna-dukung-kesehatan-mental/", "note": "Free, started May 2026." },
-      { "faculty": "Matematika dan Ilmu Pengetahuan Alam (FMIPA)", "register": "http://ugm.id/KonselingHPUFMIPA", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Pertanian", "register": "http://ugm.id/individualcounselingfapertaugm", "whatsapp": "+62 811-368-875", "source": "https://hpu.ugm.ac.id/info-layanan/", "note": "WhatsApp is the faculty's HPU call centre (earlier Faperta article)." },
-      { "faculty": "Teknik", "register": "http://ugm.id/KKMFT", "source": "https://hpu.ugm.ac.id/info-layanan/", "note": "Also in `resources` as FT UGM Wellbeing Center." },
-      { "faculty": "Sekolah Vokasi", "register": "http://ugm.id/PendaftaranKonselingSV", "instagram": "@mentalcaresvugm", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Sekolah Pascasarjana", "register": "http://ugm.id/LayananKonsultasiPsikologSPs", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Geografi — Pembangunan Wilayah (department only)", "whatsapp": "0812-4233-8080", "source": "https://pw.geo.ugm.ac.id/layanan-pengaduan/", "note": "Student Well-Being line for one department, not the whole faculty." }
+      {
+        "faculty": "Geografi — Pembangunan Wilayah (department only)",
+        "whatsapp": "0812-4233-8080",
+        "source": "https://pw.geo.ugm.ac.id/layanan-pengaduan/",
+        "note": "Student Well-Being line for one department, not the whole faculty."
+      }
     ],
     "peer_counsellors": [
-      { "faculty": "Ilmu Budaya (FIB)", "register": "https://bit.ly/ReservasiKonselingKESMEN", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Kehutanan", "info": "https://bit.ly/m/TemanRimbawan", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Teknologi Pertanian", "info": "Instagram link incomplete on the HPU page", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Teknik", "instagram": "@temancerita_ft", "source": "https://hpu.ugm.ac.id/info-layanan/" },
-      { "faculty": "Unit Kesehatan Mahasiswa (Ukesma, PIK-M)", "info": "https://ukesma.ukm.ugm.ac.id/pik-m/", "source": "https://hpu.ugm.ac.id/info-layanan/" }
+      {
+        "faculty": "Ilmu Budaya (FIB)",
+        "register": "https://bit.ly/ReservasiKonselingKESMEN",
+        "source": "https://hpu.ugm.ac.id/info-layanan/"
+      },
+      {
+        "faculty": "Kehutanan",
+        "info": "https://bit.ly/m/TemanRimbawan",
+        "source": "https://hpu.ugm.ac.id/info-layanan/"
+      },
+      {
+        "faculty": "Teknologi Pertanian",
+        "info": "Instagram link incomplete on the HPU page",
+        "source": "https://hpu.ugm.ac.id/info-layanan/"
+      },
+      {
+        "faculty": "Teknik",
+        "instagram": "@temancerita_ft",
+        "source": "https://hpu.ugm.ac.id/info-layanan/"
+      },
+      {
+        "faculty": "Unit Kesehatan Mahasiswa (Ukesma, PIK-M)",
+        "info": "https://ukesma.ukm.ugm.ac.id/pik-m/",
+        "source": "https://hpu.ugm.ac.id/info-layanan/"
+      }
     ],
     "not_found": ["Filsafat", "Kedokteran Hewan", "Peternakan", "Psikologi (students can use UKP)", "Geografi (faculty level)"]
   }

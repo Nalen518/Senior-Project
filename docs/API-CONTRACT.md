@@ -1,4 +1,10 @@
 # MindMeter API Contract
+**Version:** 1.1 (16 Nov 2026)
+
+**Changelog**
+- 1.1: adds `Resource.faculty`, the `FacultyCode` type and `InsightResponse.help` (help card with booking options, SRD FR-17). Additive, nothing renamed or removed. `GET /api/resources` no longer lists faculty-only services.
+- 1.0: first frozen contract.
+
 **Source of truth:** [`shared/contract.ts`](../shared/contract.ts) for the types, plus the backend code and tests for behaviour. This document explains the behaviour in plain language and lists what each side must do. If this file and `shared/contract.ts` ever disagree, `contract.ts` and `backend/tests/integration/api.test.js` win and this file gets fixed in the same PR.
 
 How the two sides stay matched (rules from the team's Development Plan, still in force):
@@ -102,13 +108,27 @@ Rules in `backend/src/logic/trendRules.js`; thresholds are named constants at th
 
 `trend` is `"declining"` if the low streak ≥ 3 **or** delta ≤ −0.75; `"improving"` if delta ≥ +0.75; otherwise `"stable"`. `message` is a fixed English template (low streak, declining, improving, low, stable, not enough data). Support is "needed" when the streak ≥ 3 or the average ≤ 2.5; that is internal and only changes which `resources` are returned.
 
-`themes` are the **top 3** theme codes (most frequent first, ties alphabetical) from completed NLP analyses of notes in the **last 14 calendar days** (WIB, including today), per SRD FR-13. The trend itself still uses the 7-day window above. `themes` is empty while NLP is off or no analysis is `done`. The frontend then hides the themes row completely. `resources` is up to 3 items: those tagged with the user's themes, plus counselling/crisis contacts when support is needed.
+`themes` are the **top 3** theme codes (most frequent first, ties alphabetical) from completed NLP analyses of notes in the **last 14 calendar days** (WIB, including today), per SRD FR-13. The trend itself still uses the 7-day window above. `themes` is empty while NLP is off or no analysis is `done`. The frontend then hides the themes row completely. `resources` is up to 3 items: those tagged with the user's themes, plus counselling/crisis contacts when support is needed (or the user had a crisis check-in in the last 14 days).
+
+`help` is the dashboard help card (Stage 3, `backend/src/logic/helpRules.js`). **The LLM never writes it.** Fixed rules pick pre-written sentences from the trend and the LLM's validated labels:
+
+| Input | Effect |
+|-------|--------|
+| Crisis check-in in the last `CRISIS_HELP_DAYS` (14) days | `message` is the reach-out line only, crisis contacts lead `resources` |
+| Top theme | `message` starts with that theme's tip (general line when there are no themes) |
+| Support needed (trend rules) **or** ≥ 3 notes labelled `negative` in 14 days | Booking line is direct and `suggest_booking: true` |
+| Otherwise | Booking line is soft, `suggest_booking: false` |
+| No verified counselling contacts | Message points to the Support page, `booking_options: []`, `suggest_booking: false` |
+
+`booking_options` lists every active counselling service: UGM-wide ones (`faculty: null`) and faculty-only ones. The student's faculty is picked in the browser and **never sent to the API** (FR-04). The frontend shows the student's own faculty first, then the UGM-wide ones, and hides other faculties' services. Without a picked faculty it shows only the UGM-wide ones.
 
 ### 5.6 Resources
-Public. `tags` are theme codes. Phone-only contacts come back as a `tel:` link in `url`; crisis contacts prefer the phone number. Order: primary crisis contact first.
+Public. `tags` are theme codes. `faculty` is always `null` here: faculty-only services are left out because they turn away other students, and only appear in `help.booking_options`. Phone-only contacts come back as a `tel:` link in `url`; crisis contacts prefer the phone number. Order: primary crisis contact first.
 
 ### 5.7 NLP (Stage 2, optional)
-Off until both `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are set on the server. Runs in the background after the response; a slow or failed call never affects saving a check-in, it only means `themes` stays empty.
+Off until both `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are set on the server. Runs in the background after the response; a slow or failed call never affects saving a check-in, it only means `themes` stays empty and `help` uses the trend alone.
+
+Guardrails: the note is sent alone (no user id) and marked as data, not instructions. The reply must be JSON with a sentiment from a fixed list, a score and themes from the fixed list. Anything else (extra fields, free text, broken JSON, HTTP error, timeout) is dropped or marks the analysis `failed`. Crisis notes never reach the model.
 
 ## 6. Theme codes (fixed vocabulary)
 
