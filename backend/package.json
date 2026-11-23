@@ -14,7 +14,8 @@
     "test": "node --test --test-reporter=spec \"tests/**/*.test.js\"",
     "db:migrate": "node scripts/migrate.js",
     "db:seed-demo": "node scripts/seed-demo.js",
-    "db:seed-safety": "node scripts/seed-safety.js"
+    "db:seed-safety": "node scripts/seed-safety.js",
+    "eval:nlp": "node scripts/eval-nlp.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
