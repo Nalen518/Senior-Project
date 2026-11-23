@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MindMeter — PostgreSQL schema (Proof of Concept)
--- Target: Azure Database for PostgreSQL (PostgreSQL 13+; tested on 16)
+-- Target: any PostgreSQL 13+ (tested on 16). Hosted on Supabase; RLS is enabled at the end of this file.
 -- Owner: Backend/Cloud. Matches the frozen API contract in Final PRD v1.0.
 -- =====================================================================
 
@@ -115,3 +115,16 @@ INSERT INTO themes (code, label) VALUES
 -- Resources and crisis keywords are NOT seeded here on purpose:
 -- the team must verify every contact on the official UGM page before inserting it,
 -- and supply the crisis keyword list.
+
+-- ---------- Row level security ----------
+-- Supabase publishes the `public` schema through its own web API. With RLS on and no policies, that API
+-- can read nothing, so mood check-ins are reachable only through our backend (which connects as the
+-- table owner and bypasses RLS). Harmless on plain PostgreSQL.
+ALTER TABLE users            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checkins         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE note_analyses    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE themes           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analysis_themes  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resources        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resource_themes  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE crisis_keywords  ENABLE ROW LEVEL SECURITY;

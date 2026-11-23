@@ -194,6 +194,56 @@ describe('MindMeter API', { skip }, () => {
     assert.equal(res.body.some((r) => r.title === 'Konseling FT (uji)'), false);
   });
 
+  test('rate limit: 429 RATE_LIMITED after the limit, but /api/resources always answers', async () => {
+    const limited = createApp({
+      db: pool,
+      config: { timeZone: 'Asia/Jakarta', corsOrigins: [], rateLimit: { limit: 3, windowMs: 60_000 }, openrouter: { enabled: false } },
+      logger: { warn() {}, error() {} },
+    }).listen(0);
+    try {
+      const get = (route) => fetch(`http://127.0.0.1:${limited.address().port}${route}`, { headers: { 'X-Anon-Token': TOKEN } });
+      for (let i = 0; i < 3; i += 1) assert.equal((await get('/api/insights')).status, 200);
+      const blocked = await get('/api/insights');
+      assert.equal(blocked.status, 429);
+      assert.equal((await blocked.json()).error.code, 'RATE_LIMITED');
+      assert.ok(Number(blocked.headers.get('retry-after')) > 0);
+      assert.equal((await get('/api/resources')).status, 200);
+    } finally {
+      limited.close();
+    }
+  });
+
+  test('failure drill (MM-507): with no OpenRouter key, check-in and insights still work and nothing is analysed', async () => {
+    const off = createApp({
+      db: pool,
+      config: { timeZone: 'Asia/Jakarta', corsOrigins: [], openrouter: { enabled: false } },
+      logger: { warn() {}, error() {} },
+    }).listen(0);
+    try {
+      const base2 = `http://127.0.0.1:${off.address().port}`;
+      const headers = { 'Content-Type': 'application/json', 'X-Anon-Token': 'integration_test_token_0004' };
+      const saved = await fetch(`${base2}/api/checkins`, { method: 'POST', headers, body: JSON.stringify({ mood_value: 3, note_text: 'catatan uji tanpa AI' }) });
+      assert.equal(saved.status, 200);
+      const body = await saved.json();
+      assert.equal(body.saved, true);
+      await new Promise((r) => setTimeout(r, 100));
+      const { rows } = await pool.query('SELECT count(*)::int AS n FROM note_analyses WHERE checkin_id = $1', [body.id]);
+      assert.equal(rows[0].n, 0);
+
+      const insight = await (await fetch(`${base2}/api/insights`, { headers })).json();
+      assert.deepEqual(insight.themes, []);
+      assert.ok(insight.help.message.length > 0);
+    } finally {
+      off.close();
+    }
+  });
+
+  test('every table has row level security on, so the Supabase public API reads nothing', async () => {
+    const { rows } = await pool.query(
+      "SELECT relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity");
+    assert.deepEqual(rows, []);
+  });
+
   // Rule 4 of the development plan: the backend (JavaScript) must match shared/contract.ts exactly.
   // Every response recorded above is written into a .ts file as `<json> satisfies <ContractType>`
   // and compiled. A missing, renamed, extra or wrongly-typed field fails this test (and CI).

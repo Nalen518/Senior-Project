@@ -7,7 +7,7 @@ const { Pool } = require('pg');
 function createPool(config) {
   return new Pool({
     connectionString: config.databaseUrl,
-    ssl: config.dbSsl ? { rejectUnauthorized: true } : false,
+    ssl: config.dbSsl ? { rejectUnauthorized: true, ca: config.dbSslCa } : false,
     max: 10,
   });
 }

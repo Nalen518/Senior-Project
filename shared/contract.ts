@@ -178,6 +178,7 @@ export type ApiErrorCode =
   | 'ANON_TOKEN_REQUIRED' // 401: missing or invalid X-Anon-Token
   | 'NOT_FOUND' // 404
   | 'BODY_TOO_LARGE' // 413
+  | 'RATE_LIMITED' // 429: more than 60 requests a minute from one IP. Keep any queued check-ins and retry after `Retry-After` seconds
   | 'INTERNAL_ERROR'; // 500: show a gentle retry message
 
 export interface ApiErrorResponse {

@@ -1,7 +1,8 @@
 # MindMeter API Contract
-**Version:** 1.1 (16 Nov 2026)
+**Version:** 1.2 (17 Nov 2026)
 
 **Changelog**
+- 1.2: adds error code `RATE_LIMITED` (`429`, header `Retry-After`) for the 60 requests per minute per IP limit (NFR-03). `GET /api/resources` is never limited. Additive.
 - 1.1: adds `Resource.faculty`, the `FacultyCode` type and `InsightResponse.help` (help card with booking options, SRD FR-17). Additive, nothing renamed or removed. `GET /api/resources` no longer lists faculty-only services.
 - 1.0: first frozen contract.
 
@@ -142,6 +143,7 @@ Every 4xx/5xx has the shape `{ "error": { "code", "message", "details"? } }`.
 |------|--------|------|--------------------|
 | 400 | `VALIDATION_ERROR` | Bad body; `message` says what; sync adds `details.index` | Inline message; for sync drop the bad item and retry the rest |
 | 400 | `INVALID_JSON` | Unparseable body | Treat as a bug; generic message |
+| 429 | `RATE_LIMITED` | More than 60 requests a minute from one IP | Keep queued check-ins and retry after `Retry-After` seconds. Never treat it as a bad item |
 | 401 | `ANON_TOKEN_REQUIRED` | Header missing or malformed | Recreate the token only if it is missing locally; otherwise show a generic error |
 | 404 | `NOT_FOUND` | Unknown route | Generic error |
 | 413 | `BODY_TOO_LARGE` | Over 32 KB | Send smaller sync chunks |
@@ -167,7 +169,6 @@ An OpenRouter failure never produces an error response.
 
 | Gap | Impact | Suggested handling |
 |-----|--------|--------------------|
-| No rate limiting | A stray client could hammer the free-tier API | Add a small limiter (about 60 requests/min per IP) as a hardening task; additive, not a contract change |
 | `GET /health` lives outside `/api` | None for the frontend | Keep; use it as the App Service health-check path |
 | Sync is all-or-nothing | One bad queued item blocks the rest unless the frontend drops it | Frontend rule in §5.3; or make the backend per-item later via a `contract-change` |
 | Crisis list/contacts not yet reviewed and loaded | Crisis path inactive | Team review, then `npm run db:seed-safety` (see §5.2) |

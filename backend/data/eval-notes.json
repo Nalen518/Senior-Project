@@ -1,0 +1,25 @@
+{
+  "_readme": "Invented notes for checking the LLM (PROJECT-PLAN MM-501). No real student notes. None of them contains a crisis phrase, because crisis notes never reach the model. expected_themes only lists the clear themes, so the script reports theme overlap, not exact match.",
+  "notes": [
+    { "lang": "en", "text": "Exam week is here and I have three finals in four days.", "expected_sentiment": "negative", "expected_themes": ["exams", "workload"] },
+    { "lang": "en", "text": "Slept only three hours again, can't focus in class.", "expected_sentiment": "negative", "expected_themes": ["sleep"] },
+    { "lang": "en", "text": "Had lunch with my friends today and laughed a lot.", "expected_sentiment": "positive", "expected_themes": ["relationships"] },
+    { "lang": "en", "text": "Nothing special today, just went to class and came home.", "expected_sentiment": "neutral", "expected_themes": [] },
+    { "lang": "en", "text": "Rent is due and my allowance has not arrived yet, a bit stressed.", "expected_sentiment": "negative", "expected_themes": ["finance"] },
+    { "lang": "en", "text": "Finished my assignment early and went for a long walk.", "expected_sentiment": "positive", "expected_themes": ["workload", "health"] },
+    { "lang": "en", "text": "I feel alone in this group project, nobody replies to my messages.", "expected_sentiment": "negative", "expected_themes": ["isolation", "workload"] },
+    { "lang": "en", "text": "Got a cold and a headache, stayed in bed all day.", "expected_sentiment": "negative", "expected_themes": ["health"] },
+    { "lang": "en", "text": "Hard to get started on my thesis, I keep putting it off.", "expected_sentiment": "negative", "expected_themes": ["motivation", "workload"] },
+    { "lang": "en", "text": "Talked things through with my sister and feel much lighter.", "expected_sentiment": "positive", "expected_themes": ["relationships"] },
+    { "lang": "id", "text": "Minggu ujian mulai, tugas numpuk banget.", "expected_sentiment": "negative", "expected_themes": ["exams", "workload"] },
+    { "lang": "id", "text": "Begadang lagi semalam, ngantuk parah di kelas.", "expected_sentiment": "negative", "expected_themes": ["sleep"] },
+    { "lang": "id", "text": "Makan siang bareng teman-teman, seru banget hari ini.", "expected_sentiment": "positive", "expected_themes": ["relationships"] },
+    { "lang": "id", "text": "Hari ini biasa aja, kuliah terus pulang.", "expected_sentiment": "neutral", "expected_themes": [] },
+    { "lang": "id", "text": "Uang kos belum bayar dan kiriman belum masuk, agak pusing.", "expected_sentiment": "negative", "expected_themes": ["finance"] },
+    { "lang": "id", "text": "Tugas kelompok selesai lebih cepat, lanjut jalan sore.", "expected_sentiment": "positive", "expected_themes": ["workload", "health"] },
+    { "lang": "id", "text": "Rasanya sendirian terus, nggak ada yang ngajak ngobrol.", "expected_sentiment": "negative", "expected_themes": ["isolation"] },
+    { "lang": "id", "text": "Lagi demam dan pusing, seharian cuma tiduran.", "expected_sentiment": "negative", "expected_themes": ["health"] },
+    { "lang": "id", "text": "Males banget mulai skripsi, nunda terus dari kemarin.", "expected_sentiment": "negative", "expected_themes": ["motivation", "workload"] },
+    { "lang": "id", "text": "Ngobrol sama kakak bikin hati lebih tenang.", "expected_sentiment": "positive", "expected_themes": ["relationships"] }
+  ]
+}

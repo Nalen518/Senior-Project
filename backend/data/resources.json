@@ -9,7 +9,7 @@
       "type": "crisis",
       "is_primary_crisis": true,
       "tags": [],
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "source": "https://linktr.ee/mentalhealthUGM (official short link ugm.id/MentalHealthServicesUGM from ugm.ac.id/id/layanan-kesehatan-terpadu/); 24-hour label confirmed on https://karir.feb.ugm.ac.id/konsultasi-psikologi/",
       "verify_notes": "WhatsApp line (+62 813-2952-0052). Confirm it is still active and 24 hours."
     },
@@ -21,7 +21,7 @@
       "type": "counselling",
       "is_primary_crisis": false,
       "tags": ["isolation", "relationships", "workload", "motivation"],
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "source": "https://linktr.ee/mentalhealthUGM",
       "verify_notes": "Check the booking link opens and the WhatsApp number (+62 822-6424-4767) replies."
     },
@@ -33,7 +33,7 @@
       "type": "counselling",
       "is_primary_crisis": false,
       "tags": ["health", "sleep", "isolation"],
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "source": "https://ugm.ac.id/id/layanan-kesehatan-terpadu/ and http://linktr.ee/klinikgmcugm (Poli Psikologi)",
       "verify_notes": "WhatsApp +62 813-2620-0342. Hours and 'free for all UGM' are from ugm.ac.id."
     },
@@ -45,7 +45,7 @@
       "type": "counselling",
       "is_primary_crisis": false,
       "tags": ["relationships", "motivation", "isolation"],
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "source": "https://ukp.psikologi.ugm.ac.id/ and https://ditmawa.ugm.ac.id/prosedur-layanan/layanan-kesehatan-dan-bimbingan-konseling-mahasiswa/",
       "verify_notes": "+62 821-3768-0588 is labelled 'Layanan Civitas' on the UKP site. Ask whether UGM students pay anything."
     },
@@ -57,7 +57,7 @@
       "type": "counselling",
       "is_primary_crisis": false,
       "tags": ["workload", "exams", "isolation"],
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "source": "https://ft.ugm.ac.id/ft-ugm-sediakan-layanan-konsultasi-karir-dan-kesehatan-mental/ and https://hpu.ugm.ac.id/info-layanan/",
       "verify_notes": "Number conflict: the 2024 FT article gives +62 813-9173-7076; ft.ugm.ac.id/konseling-psikologi shows the general 'Layanan Terpadu' WA +62 852-9099-4065. Confirm which reaches counselling.",
       "faculty": "engineering"
@@ -70,7 +70,7 @@
       "type": "crisis",
       "is_primary_crisis": false,
       "tags": [],
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "source": "https://hpu.ugm.ac.id/info-layanan/ (Emergency Call Center, managed by PK4L) and https://ugm.ac.id/id/layanan-kesehatan-terpadu/",
       "verify_notes": "For incidents happening now, not for past complaints."
     },
@@ -82,7 +82,7 @@
       "type": "crisis",
       "is_primary_crisis": false,
       "tags": ["isolation"],
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "source": "https://kesprimkom.kemkes.go.id/konten/158/151/0/cegah-bunuh-diri-dukung-kesehatan-jiwa-kenali-layanan-healing119-id",
       "verify_notes": "Do NOT put 119 in phone: a tel:119 link dials the ambulance line, not extension 8. Kemenkes says 'pagi hingga malam' (not 24/7)."
     },
@@ -95,19 +95,19 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "biology",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
     },
     {
       "title": "Faculty of Economics and Business (FEB) Counselling Service",
-      "description": "Psychological counselling for Faculty of Economics and Business (FEB) students. Register through this link.",
+      "description": "Psychological counselling for Faculty of Economics and Business (FEB) students. Register by chatting on WhatsApp through this link.",
       "phone": null,
       "url": "https://wa.me/628112843884",
       "type": "counselling",
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "economics_business",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://karir.feb.ugm.ac.id/konsultasi-psikologi/. Registration is via SINTESIS portal academics.feb.ac.id/portalmhs (menu Konsultasi), so the WhatsApp line is used here. Page also links wa.me/628112975295 as 'Hubungi Kami'; confirm which is current. Confirm the link still opens and who it serves."
     },
     {
@@ -119,7 +119,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "pharmacy",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
     },
     {
@@ -131,7 +131,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "law",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://law.ugm.ac.id/en/bisa-konseling-gratis-fakultas-hukum-universitas-gadjah-mada-buka-layanan-dukungan-psikologis/. WhatsApp +62 821-3617-5361. 4 free sessions per semester (2024 article). Confirm the link still opens and who it serves."
     },
     {
@@ -143,7 +143,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "social_political_sciences",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Fisipol CDC page is from 2018; use the HPU link. Confirm the link still opens and who it serves."
     },
     {
@@ -155,7 +155,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "medicine_public_health_nursing",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://fkkmk.ugm.ac.id/layanan-psikologi/. WhatsApp 0811-2570-027. Page last updated 2023. Confirm the link still opens and who it serves."
     },
     {
@@ -167,7 +167,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "dentistry",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://fkg.ugm.ac.id/fkg-ugm-sediakan-layanan-konsultasi-psikologi-guna-dukung-kesehatan-mental/. Free, started May 2026. Confirm the link still opens and who it serves."
     },
     {
@@ -179,7 +179,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "mathematics_natural_sciences",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
     },
     {
@@ -191,7 +191,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "agriculture",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. WhatsApp +62 811-368-875. WhatsApp is the faculty's HPU call centre (earlier Faperta article). Confirm the link still opens and who it serves."
     },
     {
@@ -203,7 +203,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "vocational_college",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
     },
     {
@@ -215,7 +215,7 @@
       "is_primary_crisis": false,
       "tags": [],
       "faculty": "graduate_school",
-      "verified_at": "",
+      "verified_at": "2026-11-23",
       "verify_notes": "Source: https://hpu.ugm.ac.id/info-layanan/. Confirm the link still opens and who it serves."
     }
   ],
