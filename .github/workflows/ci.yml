@@ -75,6 +75,8 @@ jobs:
       - run: npm ci
       - name: Lint
         run: npm run lint
+      - name: Dependency audit (fails on high or critical)
+        run: npm audit --audit-level=high
       - name: Unit + integration tests (real PostgreSQL)
         run: npm test
         env:

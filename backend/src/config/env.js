@@ -19,9 +19,14 @@ function loadConfig(env = process.env) {
     nodeEnv: env.NODE_ENV || 'development',
     port: Number(env.PORT) || 3000,
     databaseUrl: env.DATABASE_URL,
-    dbSsl: env.DB_SSL !== 'false', // Azure requires SSL, so it is on unless explicitly disabled
+    dbSsl: env.DB_SSL !== 'false', // hosted databases require SSL, so it is on unless explicitly disabled
+    // Supabase signs its certificate with its own CA. Paste the CA certificate here, with line breaks written as \n.
+    dbSslCa: (env.DB_SSL_CA || '').replace(/\\n/g, '\n') || undefined,
     corsOrigins: list(env.CORS_ORIGIN),
     timeZone: 'Asia/Jakarta', // check_date is always the WIB calendar day
+    // NFR-03. Behind a proxy (Railway, Azure) set TRUST_PROXY=1 so the limit counts real client IPs, not the proxy.
+    trustProxy: Number(env.TRUST_PROXY) || false,
+    rateLimit: { limit: Number(env.RATE_LIMIT_PER_MIN) || 60, windowMs: 60_000 },
     openrouter: {
       apiKey: env.OPENROUTER_API_KEY || '',
       model: env.OPENROUTER_MODEL || '',
