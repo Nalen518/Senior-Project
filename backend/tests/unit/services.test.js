@@ -119,8 +119,16 @@ describe('nlpService guardrails (MM-503)', () => {
     return calls;
   };
   const reply = (content) => async () => ({ ok: true, json: async () => ({ choices: [{ message: { content } }] }) });
+  // AbortSignal.timeout does not keep the event loop alive, so a pending timer here stops Node from
+  // ending the test file early ("event loop has already resolved") before the abort fires.
   const hang = async (url, { signal }) =>
-    new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason)));
+    new Promise((resolve, reject) => {
+      const keepAlive = setTimeout(resolve, 5000);
+      signal.addEventListener('abort', () => {
+        clearTimeout(keepAlive);
+        reject(signal.reason);
+      });
+    });
 
   test('valid reply is stored as done', async () => {
     const calls = await run(reply('{"sentiment":"negative","score":0.8,"themes":["sleep"]}'));
