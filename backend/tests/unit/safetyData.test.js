@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { validateKeywords, validateResources, FACULTY_CODES } = require('../../scripts/lib/safetyData');
+const { containsCrisisKeyword } = require('../../src/logic/crisisCheck');
 const { toResource } = require('../../src/models/resources');
 
 describe('toResource (how contacts reach the support screen)', () => {
@@ -72,12 +73,11 @@ describe('validateResources', () => {
     assert.match(errors.join(), /at most one/);
   });
 
-  test('the draft files in backend/data are refused until reviewed and verified', () => {
-    const kw = validateKeywords(require('../../data/crisis-keywords.json'));
+  test('every contact in backend/data is verified and valid, with exactly one primary crisis contact', () => {
     const res = validateResources(require('../../data/resources.json'), ['sleep', 'workload', 'exams', 'isolation', 'relationships', 'finance', 'health', 'motivation']);
-    assert.ok(kw.errors.length > 0, 'draft keyword list must not load before review');
-    assert.ok(kw.phrases.length > 0);
-    assert.ok(res.errors.every((e) => /verified_at/.test(e)), `only verification should be missing: ${res.errors.join(' | ')}`);
+    assert.deepEqual(res.errors, []);
+    assert.equal(res.resources.length, 18);
+    assert.equal(res.resources.filter((r) => r.is_primary_crisis).length, 1);
   });
 });
 
@@ -108,5 +108,30 @@ describe('faculty codes', () => {
   test('every faculty in data/resources.json is valid', () => {
     const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'resources.json'), 'utf8'));
     for (const r of data.resources) if (r.faculty) assert.ok(FACULTY_CODES.includes(r.faculty), r.faculty);
+  });
+});
+
+describe('the real crisis keyword list (FR-05)', () => {
+  const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'crisis-keywords.json'), 'utf8'));
+  const { phrases, errors } = validateKeywords(data);
+
+  test('is reviewed, so seed-safety will load it', () => {
+    assert.deepEqual(errors, []);
+  });
+
+  test('every phrase in the list triggers the crisis check inside a normal sentence', () => {
+    for (const p of phrases) assert.equal(containsCrisisKeyword(`Hari ini berat, ${p}.`, phrases), true, p);
+  });
+
+  test('English and Indonesian examples are caught', () => {
+    for (const note of ['I want to die', 'Sometimes I think about suicide.', 'aku mau bunuh diri', 'Pengen mati aja rasanya!']) {
+      assert.equal(containsCrisisKeyword(note, phrases), true, note);
+    }
+  });
+
+  test('ordinary notes are not flagged', () => {
+    for (const note of ['Tugas numpuk, capek banget', 'Exam week, barely slept', 'This deadline is killing me']) {
+      assert.equal(containsCrisisKeyword(note, phrases), false, note);
+    }
   });
 });
