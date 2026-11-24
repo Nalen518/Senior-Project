@@ -2,7 +2,10 @@
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { validateKeywords, validateResources } = require('../../scripts/lib/safetyData');
+const fs = require('node:fs');
+const path = require('node:path');
+const { validateKeywords, validateResources, FACULTY_CODES } = require('../../scripts/lib/safetyData');
+const { containsCrisisKeyword } = require('../../src/logic/crisisCheck');
 const { toResource } = require('../../src/models/resources');
 
 describe('toResource (how contacts reach the support screen)', () => {
@@ -70,11 +73,65 @@ describe('validateResources', () => {
     assert.match(errors.join(), /at most one/);
   });
 
-  test('the draft files in backend/data are refused until reviewed and verified', () => {
-    const kw = validateKeywords(require('../../data/crisis-keywords.json'));
+  test('every contact in backend/data is verified and valid, with exactly one primary crisis contact', () => {
     const res = validateResources(require('../../data/resources.json'), ['sleep', 'workload', 'exams', 'isolation', 'relationships', 'finance', 'health', 'motivation']);
-    assert.ok(kw.errors.length > 0, 'draft keyword list must not load before review');
-    assert.ok(kw.phrases.length > 0);
-    assert.ok(res.errors.every((e) => /verified_at/.test(e)), `only verification should be missing: ${res.errors.join(' | ')}`);
+    assert.deepEqual(res.errors, []);
+    assert.equal(res.resources.length, 18);
+    assert.equal(res.resources.filter((r) => r.is_primary_crisis).length, 1);
+  });
+});
+
+describe('faculty codes', () => {
+  const ok = { title: 'T', description: 'D', url: 'https://x', type: 'counselling', verified_at: '2026-11-16', tags: [] };
+
+  test('a known faculty on a counselling service is kept', () => {
+    const { resources, errors } = validateResources({ resources: [{ ...ok, faculty: 'engineering' }] }, []);
+    assert.deepEqual(errors, []);
+    assert.equal(resources[0].faculty, 'engineering');
+  });
+
+  test('missing faculty means UGM-wide (null)', () => {
+    assert.equal(validateResources({ resources: [ok] }, []).resources[0].faculty, null);
+  });
+
+  test('unknown faculty, or a faculty on a non-counselling entry, is refused', () => {
+    assert.match(validateResources({ resources: [{ ...ok, faculty: 'astrology' }] }, []).errors.join(), /unknown faculty/);
+    assert.match(validateResources({ resources: [{ ...ok, type: 'crisis', faculty: 'law' }] }, []).errors.join(), /only counselling/);
+  });
+
+  test('backend list matches FacultyCode in shared/contract.ts', () => {
+    const ts = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'shared', 'contract.ts'), 'utf8');
+    const union = ts.match(/export type FacultyCode =([^;]+);/)[1];
+    assert.deepEqual([...union.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).sort(), [...FACULTY_CODES].sort());
+  });
+
+  test('every faculty in data/resources.json is valid', () => {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'resources.json'), 'utf8'));
+    for (const r of data.resources) if (r.faculty) assert.ok(FACULTY_CODES.includes(r.faculty), r.faculty);
+  });
+});
+
+describe('the real crisis keyword list (FR-05)', () => {
+  const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'crisis-keywords.json'), 'utf8'));
+  const { phrases, errors } = validateKeywords(data);
+
+  test('is reviewed, so seed-safety will load it', () => {
+    assert.deepEqual(errors, []);
+  });
+
+  test('every phrase in the list triggers the crisis check inside a normal sentence', () => {
+    for (const p of phrases) assert.equal(containsCrisisKeyword(`Hari ini berat, ${p}.`, phrases), true, p);
+  });
+
+  test('English and Indonesian examples are caught', () => {
+    for (const note of ['I want to die', 'Sometimes I think about suicide.', 'aku mau bunuh diri', 'Pengen mati aja rasanya!']) {
+      assert.equal(containsCrisisKeyword(note, phrases), true, note);
+    }
+  });
+
+  test('ordinary notes are not flagged', () => {
+    for (const note of ['Tugas numpuk, capek banget', 'Exam week, barely slept', 'This deadline is killing me']) {
+      assert.equal(containsCrisisKeyword(note, phrases), false, note);
+    }
   });
 });

@@ -1,7 +1,7 @@
 /**
  * MindMeter API contract — the single source of truth for every request and response.
  *
- * RULES (see docs/MindMeter_Development_Plan.pdf):
+ * RULES (see docs/API-CONTRACT.md):
  *  - Types only. No runtime code, so importing this file can never break a build.
  *  - Frontend: `import type { ... } from '<path>/shared/contract'`, used ONLY in frontend/src/lib/api.ts.
  *  - Backend (JavaScript) is checked against these types automatically:
@@ -45,6 +45,35 @@ export interface Resource {
   url: string;
   //type: ResourceType;
   tags: ThemeCode[];
+  /** null = open to all UGM students. Otherwise only that faculty's students can use it. */
+  faculty: FacultyCode | null;
+}
+
+/**
+ * UGM faculties and schools. The student's faculty is picked in the browser and never sent to the API
+ * (no demographics, FR-04). The frontend uses it only to order `InsightHelp.booking_options`.
+ */
+export type FacultyCode =
+  | 'agricultural_technology' | 'agriculture' | 'animal_science' | 'biology' | 'cultural_sciences'
+  | 'dentistry' | 'economics_business' | 'engineering' | 'forestry' | 'geography' | 'graduate_school'
+  | 'law' | 'mathematics_natural_sciences' | 'medicine_public_health_nursing' | 'pharmacy' | 'philosophy'
+  | 'psychology' | 'social_political_sciences' | 'veterinary_medicine' | 'vocational_college';
+
+/**
+ * Help card on the dashboard. `message` is pre-written text chosen by fixed rules from the trend and the
+ * LLM's validated labels. The LLM never writes text shown to students (NFR-05).
+ */
+export interface InsightHelp {
+  /** Plain-language English text to show as-is. */
+  message: string;
+  /** true = show the booking options prominently (low trend, several negative notes, or a recent crisis check-in). */
+  suggest_booking: boolean;
+  /**
+   * Counselling services to book: UGM-wide ones (faculty: null) and faculty-only ones.
+   * Show the student's own faculty first, then the UGM-wide ones, and hide other faculties' services.
+   * May be empty until contacts are verified.
+   */
+  booking_options: Resource[];
 }
 
 // ---------------------------------------------------------------- identity + browser storage
@@ -130,12 +159,13 @@ export type CheckinListResponse = CheckinListItem[];
 
 export interface InsightResponse {
   trend: Trend;
-  /** Plain-language Indonesian sentence to show as-is. */
+  /** Plain-language English sentence to show as-is. */
   message: string;
-  /** Themes found in this week's notes (empty until Stage 2 NLP is switched on). */
+  /** Top 3 themes (most frequent first) from the last 14 days of notes (empty until Stage 2 NLP is switched on). */
   themes: ThemeCode[];
   /** Up to 3 matched resources. May be empty. */
   resources: Resource[];
+  help: InsightHelp;
 }
 
 // ---------------------------------------------------------------- GET /api/resources
@@ -151,6 +181,7 @@ export type ApiErrorCode =
   | 'ANON_TOKEN_REQUIRED' // 401: missing or invalid X-Anon-Token
   | 'NOT_FOUND' // 404
   | 'BODY_TOO_LARGE' // 413
+  | 'RATE_LIMITED' // 429: more than 60 requests a minute from one IP. Keep any queued check-ins and retry after `Retry-After` seconds
   | 'INTERNAL_ERROR'; // 500: show a gentle retry message
 
 export interface ApiErrorResponse {

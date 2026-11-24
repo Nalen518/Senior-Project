@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MindMeter — PostgreSQL schema (Proof of Concept)
--- Target: Azure Database for PostgreSQL (PostgreSQL 13+; tested on 16)
+-- Target: any PostgreSQL 13+ (tested on 16). Hosted on Supabase; RLS is enabled at the end of this file.
 -- Owner: Backend/Cloud. Matches the frozen API contract in Final PRD v1.0.
 -- =====================================================================
 
@@ -57,7 +57,7 @@ CREATE TABLE note_analyses (
 CREATE TABLE themes (
     id        SMALLSERIAL PRIMARY KEY,
     code      TEXT NOT NULL UNIQUE,    -- used in API as themes[] / tags[]
-    label_id  TEXT NOT NULL            -- Indonesian display label
+    label     TEXT NOT NULL            -- English display label
 );
 
 -- analyses <-> themes (many-to-many)
@@ -77,6 +77,7 @@ CREATE TABLE resources (
     type               resource_type NOT NULL,
     is_primary_crisis  BOOLEAN       NOT NULL DEFAULT false, -- shown first on the crisis screen
     sort_order         SMALLINT      NOT NULL DEFAULT 0,
+    faculty            TEXT          CHECK (faculty ~ '^[a-z_]+$'), -- NULL = UGM-wide, else that faculty's students only
     active             BOOLEAN       NOT NULL DEFAULT true,
     verified_at        DATE,                                  -- when the team last confirmed the contact
     created_at         TIMESTAMPTZ   NOT NULL DEFAULT now(),
@@ -101,16 +102,29 @@ CREATE TABLE crisis_keywords (
 );
 
 -- ---------- Reference data: theme vocabulary ----------
-INSERT INTO themes (code, label_id) VALUES
-    ('sleep',      'Tidur'),
-    ('workload',   'Beban tugas'),
-    ('exams',      'Ujian'),
-    ('isolation',  'Merasa sendiri'),
-    ('relationships', 'Hubungan'),
-    ('finance',    'Keuangan'),
-    ('health',     'Kesehatan fisik'),
-    ('motivation', 'Motivasi');
+INSERT INTO themes (code, label) VALUES
+    ('sleep',      'Sleep'),
+    ('workload',   'Workload'),
+    ('exams',      'Exams'),
+    ('isolation',  'Feeling isolated'),
+    ('relationships', 'Relationships'),
+    ('finance',    'Finances'),
+    ('health',     'Physical health'),
+    ('motivation', 'Motivation');
 
 -- Resources and crisis keywords are NOT seeded here on purpose:
 -- the team must verify every contact on the official UGM page before inserting it,
 -- and supply the crisis keyword list.
+
+-- ---------- Row level security ----------
+-- Supabase publishes the `public` schema through its own web API. With RLS on and no policies, that API
+-- can read nothing, so mood check-ins are reachable only through our backend (which connects as the
+-- table owner and bypasses RLS). Harmless on plain PostgreSQL.
+ALTER TABLE users            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checkins         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE note_analyses    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE themes           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analysis_themes  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resources        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resource_themes  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE crisis_keywords  ENABLE ROW LEVEL SECURITY;
