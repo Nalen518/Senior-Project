@@ -188,7 +188,7 @@ export const Hero = () => {
 
           {/* Text Input Container */}
           <div
-            className={`relative w-full rounded-xl border border-gray-300 bg-[#E8F3F3] p-4 text-left shadow-sm ${isSaved ? "" : ""}`}
+            className={`relative w-full rounded-xl border focus-within:outline-2 focus-within:outline-[#1F3347] border-gray-300 bg-[#E8F3F3] p-4 text-left shadow-sm ${isSaved ? "" : ""}`}
           >
             <textarea
               value={note}
