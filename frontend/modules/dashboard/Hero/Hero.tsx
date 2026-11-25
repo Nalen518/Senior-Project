@@ -6,6 +6,13 @@ import { api } from "@/lib/api";
 import { flushQueue, readQueue } from "@/lib/syncQueue";
 import type { SyncItem } from "../../../../shared/contract";
 import { MoodFace } from "@/components/UI/MoodFace";
+import type { FacultyCode } from "../../../../shared/contract";
+import {
+  facultyOptions,
+  filterBookingOptions,
+  readFaculty,
+  saveFaculty,
+} from "@/lib/faculty";
 
 type Checkin = Awaited<ReturnType<typeof api.listCheckins>>[number];
 type Insight = Awaited<ReturnType<typeof api.getInsights>>;
@@ -81,6 +88,10 @@ export const Hero = () => {
   const [selectedRange, setSelectedRange] = useState<7 | 30>(7);
   const [historyPageSize, setHistoryPageSize] = useState<7 | 10 | 15 | 31>(7);
   const [historyPage, setHistoryPage] = useState(1);
+  const hasEnoughInsightData = insight?.has_enough_data === true;
+  const [selectedFaculty, setSelectedFaculty] = useState<FacultyCode | null>(
+    null,
+  );
 
   const hasNoCheckins =
     !isLoading &&
@@ -245,6 +256,22 @@ export const Hero = () => {
   const handleHistoryPageSizeChange = (size: 7 | 10 | 15 | 31) => {
     setHistoryPageSize(size);
     setHistoryPage(1);
+  };
+
+  useEffect(() => {
+    setSelectedFaculty(readFaculty());
+  }, []);
+
+  const bookingOptions = filterBookingOptions(
+    insight?.help.booking_options ?? [],
+    selectedFaculty,
+  );
+
+  const handleFacultyChange = (value: string) => {
+    const faculty = value === "" ? null : (value as FacultyCode);
+
+    setSelectedFaculty(faculty);
+    saveFaculty(faculty);
   };
   return (
     <>
@@ -468,40 +495,42 @@ export const Hero = () => {
                   )}
                 </article>
 
-                <article className="rounded-xl bg-[#1F405D] p-4 text-white">
-                  <p className="text-[10px] font-bold tracking-wider text-[#C9DCDD]">
-                    INSIGHT · RECENT CHECK-INS
-                  </p>
+                {hasEnoughInsightData && (
+                  <article className="rounded-xl bg-[#1F405D] p-4 text-white">
+                    <p className="text-[10px] font-bold tracking-wider text-[#C9DCDD]">
+                      INSIGHT · RECENT CHECK-INS
+                    </p>
 
-                  <p className="mt-4 font-serif text-lg leading-relaxed">
-                    {insight?.message ??
-                      "Check in a few more days to see your mood pattern."}
-                  </p>
+                    <p className="mt-4 font-serif text-lg leading-relaxed">
+                      {insight?.message ??
+                        "Check in a few more days to see your mood pattern."}
+                    </p>
 
-                  <p className="mt-5 text-[10px] font-bold tracking-wider text-[#C9DCDD]">
-                    THEMES
-                  </p>
+                    <p className="mt-5 text-[10px] font-bold tracking-wider text-[#C9DCDD]">
+                      THEMES
+                    </p>
 
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {insight?.themes.length ? (
-                      insight.themes.map((theme) => (
-                        <span
-                          key={theme}
-                          className="rounded-full bg-[#C9DCDD] px-3 py-1 text-xs font-bold text-[#1F405D]"
-                        >
-                          {theme}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {insight?.themes.length ? (
+                        insight.themes.map((theme) => (
+                          <span
+                            key={theme}
+                            className="rounded-full bg-[#C9DCDD] px-3 py-1 text-xs font-bold text-[#1F405D]"
+                          >
+                            {theme}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-[#C9DCDD]">
+                          Themes will appear as you check in.
                         </span>
-                      ))
-                    ) : (
-                      <span className="text-sm text-[#C9DCDD]">
-                        Themes will appear as you check in.
-                      </span>
-                    )}
-                  </div>
-                </article>
+                      )}
+                    </div>
+                  </article>
+                )}
               </section>
 
-              {insight?.resources.length ? (
+              {hasEnoughInsightData && insight?.resources.length ? (
                 <section className="mt-6">
                   <h2 className="font-serif text-lg font-bold">
                     Suggested resources
@@ -541,6 +570,80 @@ export const Hero = () => {
                 </section>
               ) : null}
 
+              <section className="mt-6 rounded-xl border border-[#D5E1E2] bg-white p-4">
+                <h2 className="font-serif text-lg font-bold">
+                  Find a counsellor
+                </h2>
+
+                <p className="mt-1 text-sm text-[#3D4D59]">
+                  Choose your faculty to see counselling services available to
+                  you. This choice stays only in this browser.
+                </p>
+
+                <label className="mt-4 block text-sm font-semibold text-[#1F405D]">
+                  Your faculty
+                  <select
+                    value={selectedFaculty ?? ""}
+                    onChange={(event) =>
+                      handleFacultyChange(event.target.value)
+                    }
+                    className="mt-2 w-full rounded-lg border border-[#9FB7B9] bg-white px-3 py-2 text-sm text-[#1F405D] outline-none focus:ring-2 focus:ring-[#2A9D90]"
+                  >
+                    <option value="">Choose your faculty</option>
+
+                    {facultyOptions.map((faculty) => (
+                      <option key={faculty.value} value={faculty.value}>
+                        {faculty.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {!selectedFaculty && (
+                  <p className="mt-4 text-sm text-[#3D4D59]">
+                    Choose your faculty to see relevant faculty counselling
+                    services. UGM-wide services are also available below.
+                  </p>
+                )}
+
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {bookingOptions.length === 0 ? (
+                    <p className="text-sm text-[#3D4D59]">
+                      Counselling contacts will appear here once they are
+                      available.
+                    </p>
+                  ) : (
+                    bookingOptions.map((resource) => {
+                      const isPhoneLink = resource.url.startsWith("tel:");
+
+                      return (
+                        <article
+                          key={resource.id}
+                          className="rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4"
+                        >
+                          <h3 className="font-serif font-bold">
+                            {resource.title}
+                          </h3>
+
+                          <p className="mt-2 text-xs text-[#3D4D59]">
+                            {resource.description}
+                          </p>
+
+                          <a
+                            href={resource.url}
+                            target={isPhoneLink ? undefined : "_blank"}
+                            rel={isPhoneLink ? undefined : "noreferrer"}
+                            className="mt-4 inline-flex text-xs font-bold underline"
+                          >
+                            {isPhoneLink ? "Call" : "Open booking"} →
+                          </a>
+                        </article>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+              
               <section className="mt-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-baseline gap-2">

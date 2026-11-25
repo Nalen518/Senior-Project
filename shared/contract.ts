@@ -23,19 +23,26 @@ export type MoodValue = 1 | 2 | 3 | 4 | 5;
 
 /** Fixed theme vocabulary (the `themes` table). Used in Insight.themes and Resource.tags. */
 export type ThemeCode =
-  | 'sleep'
-  | 'workload'
-  | 'exams'
-  | 'isolation'
-  | 'relationships'
-  | 'finance'
-  | 'health'
-  | 'motivation';
+  | "sleep"
+  | "workload"
+  | "exams"
+  | "isolation"
+  | "relationships"
+  | "finance"
+  | "health"
+  | "motivation";
 
-export type Trend = 'stable' | 'declining' | 'improving';
+export type Trend = "stable" | "declining" | "improving";
 
 /** A support contact or self-help resource. The primary crisis contact always comes first. */
 //export type ResourceType = "crisis" | "counselling" | "self_help";
+
+export type SupportGroup =
+  | "crisis"
+  | "university"
+  | "faculty"
+  | "clinic"
+  | "self_help";
 
 export interface Resource {
   id: Uuid;
@@ -47,6 +54,7 @@ export interface Resource {
   tags: ThemeCode[];
   /** null = open to all UGM students. Otherwise only that faculty's students can use it. */
   faculty: FacultyCode | null;
+  support_group: SupportGroup;
 }
 
 /**
@@ -54,10 +62,26 @@ export interface Resource {
  * (no demographics, FR-04). The frontend uses it only to order `InsightHelp.booking_options`.
  */
 export type FacultyCode =
-  | 'agricultural_technology' | 'agriculture' | 'animal_science' | 'biology' | 'cultural_sciences'
-  | 'dentistry' | 'economics_business' | 'engineering' | 'forestry' | 'geography' | 'graduate_school'
-  | 'law' | 'mathematics_natural_sciences' | 'medicine_public_health_nursing' | 'pharmacy' | 'philosophy'
-  | 'psychology' | 'social_political_sciences' | 'veterinary_medicine' | 'vocational_college';
+  | "agricultural_technology"
+  | "agriculture"
+  | "animal_science"
+  | "biology"
+  | "cultural_sciences"
+  | "dentistry"
+  | "economics_business"
+  | "engineering"
+  | "forestry"
+  | "geography"
+  | "graduate_school"
+  | "law"
+  | "mathematics_natural_sciences"
+  | "medicine_public_health_nursing"
+  | "pharmacy"
+  | "philosophy"
+  | "psychology"
+  | "social_political_sciences"
+  | "veterinary_medicine"
+  | "vocational_college";
 
 /**
  * Help card on the dashboard. `message` is pre-written text chosen by fixed rules from the trend and the
@@ -82,10 +106,10 @@ export interface InsightHelp {
  * Every /api request except GET /api/resources must send this header.
  * Value: crypto.randomUUID(), created once and kept in localStorage.
  */
-export type AnonTokenHeader = 'X-Anon-Token';
+export type AnonTokenHeader = "X-Anon-Token";
 
 /** The only localStorage keys MindMeter uses. Never rename them. */
-export type StorageKey = 'mindmeter_anon_token' | 'mindmeter_sync_queue';
+export type StorageKey = "mindmeter_anon_token" | "mindmeter_sync_queue";
 
 /** Shape stored under localStorage['mindmeter_sync_queue'] while offline. */
 export type SyncQueue = SyncItem[];
@@ -114,9 +138,17 @@ export interface CheckinCrisis {
   saved: true;
   crisis_flag: true;
 }
-
+/**
+ * A newer check-in already exists for this Jakarta calendar day, so the
+ * submitted older entry was not written.
+ */
+export interface CheckinNotSaved {
+  id: Uuid;
+  saved: false;
+  crisis_flag: boolean;
+}
 /** Check `crisis_flag` first; TypeScript then knows whether `insight` exists. */
-export type CheckinResponse = CheckinSaved | CheckinCrisis;
+export type CheckinResponse = CheckinSaved | CheckinCrisis | CheckinNotSaved;
 
 // ---------------------------------------------------------------- POST /api/checkins/sync
 
@@ -161,6 +193,8 @@ export interface InsightResponse {
   trend: Trend;
   /** Plain-language English sentence to show as-is. */
   message: string;
+  /** True when the backend has at least three check-ins in the last seven WIB days. */
+  has_enough_data: boolean;
   /** Top 3 themes (most frequent first) from the last 14 days of notes (empty until Stage 2 NLP is switched on). */
   themes: ThemeCode[];
   /** Up to 3 matched resources. May be empty. */
@@ -176,13 +210,13 @@ export type ResourcesResponse = Resource[];
 // ---------------------------------------------------------------- errors (any 4xx / 5xx)
 
 export type ApiErrorCode =
-  | 'VALIDATION_ERROR' // 400: bad body; `message` says what is wrong
-  | 'INVALID_JSON' // 400
-  | 'ANON_TOKEN_REQUIRED' // 401: missing or invalid X-Anon-Token
-  | 'NOT_FOUND' // 404
-  | 'BODY_TOO_LARGE' // 413
-  | 'RATE_LIMITED' // 429: more than 60 requests a minute from one IP. Keep any queued check-ins and retry after `Retry-After` seconds
-  | 'INTERNAL_ERROR'; // 500: show a gentle retry message
+  | "VALIDATION_ERROR" // 400: bad body; `message` says what is wrong
+  | "INVALID_JSON" // 400
+  | "ANON_TOKEN_REQUIRED" // 401: missing or invalid X-Anon-Token
+  | "NOT_FOUND" // 404
+  | "BODY_TOO_LARGE" // 413
+  | "RATE_LIMITED" // 429: more than 60 requests a minute from one IP. Keep any queued check-ins and retry after `Retry-After` seconds
+  | "INTERNAL_ERROR"; // 500: show a gentle retry message
 
 export interface ApiErrorResponse {
   error: {
@@ -197,11 +231,31 @@ export interface ApiErrorResponse {
 
 /** One entry per endpoint. frontend/src/lib/api.ts types every call from this map. */
 export interface Endpoints {
-  'POST /api/checkins': { request: CheckinRequest; response: CheckinResponse; needsToken: true };
-  'POST /api/checkins/sync': { request: SyncRequest; response: SyncResponse; needsToken: true };
-  'GET /api/checkins': { request: undefined; response: CheckinListResponse; needsToken: true };
-  'GET /api/insights': { request: undefined; response: InsightResponse; needsToken: true };
-  'GET /api/resources': { request: undefined; response: ResourcesResponse; needsToken: false };
+  "POST /api/checkins": {
+    request: CheckinRequest;
+    response: CheckinResponse;
+    needsToken: true;
+  };
+  "POST /api/checkins/sync": {
+    request: SyncRequest;
+    response: SyncResponse;
+    needsToken: true;
+  };
+  "GET /api/checkins": {
+    request: undefined;
+    response: CheckinListResponse;
+    needsToken: true;
+  };
+  "GET /api/insights": {
+    request: undefined;
+    response: InsightResponse;
+    needsToken: true;
+  };
+  "GET /api/resources": {
+    request: undefined;
+    response: ResourcesResponse;
+    needsToken: false;
+  };
 }
 
 export type EndpointKey = keyof Endpoints;

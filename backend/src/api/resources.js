@@ -1,11 +1,13 @@
-'use strict';
+"use strict";
 
-const express = require('express');
+const express = require("express");
 
-// GET /api/resources -> [{ id, title, description, url, tags }]  (primary crisis contact first)
+// GET /api/resources -> resources grouped by support_group in the frontend.
+// The primary crisis contact is returned first.
+
 function resourcesRouter({ models }) {
   const router = express.Router();
-  router.get('/', async (req, res) => {
+  router.get("/", async (req, res) => {
     res.json(await models.resources.listActive());
   });
   return router;

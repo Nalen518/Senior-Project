@@ -18,5 +18,6 @@ export const offlineSupportResources: OfflineSupportResource[] = [
   //   url: "tel:+620000000000",
   //   tags: [],
   //   verified_at: "2026-11-17",
+  // faculty: null,
   // },
 ];

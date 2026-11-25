@@ -2,8 +2,9 @@
 
 // Support contacts and self-help resources, returned in the contract's Resource shape:
 // { id, title, description, url, tags, faculty }.
-// Faculty services (faculty set) only serve their own students, so they are left out of the
-// general lists and only offered as booking options, where the frontend shows the student's own faculty.
+// Faculty services are returned for the Support page and grouped by
+// support_group: "faculty". The frontend displays them separately from
+// university-wide counselling, clinic, and crisis services.
 // The contract has one `url` field, so a phone number is returned as a tel: link.
 // Crisis contacts (and the primary crisis contact) prefer the phone: in a crisis the student
 // should get a number to call, not a website. Other resources prefer their website.
@@ -15,11 +16,19 @@ const toResource = (row) => {
   let url;
   if (phoneFirst) url = row.phone ? telLink(row.phone) : row.url;
   else url = row.url || telLink(row.phone);
-  return { id: row.id, title: row.title, description: row.description, url, tags: row.tags || [], faculty: row.faculty ?? null };
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    url,
+    tags: row.tags || [],
+    faculty: row.faculty ?? null,
+    support_group: row.support_group,
+  };
 };
 
 const SELECT = `
-  SELECT r.id, r.title, r.description, r.url, r.phone, r.type, r.is_primary_crisis, r.sort_order, r.faculty,
+  SELECT r.id, r.title, r.description, r.url, r.phone, r.type, r.is_primary_crisis, r.sort_order, r.faculty, r.support_group,
          COALESCE(array_agg(t.code ORDER BY t.code) FILTER (WHERE t.code IS NOT NULL), '{}') AS tags
     FROM resources r
     LEFT JOIN resource_themes rt ON rt.resource_id = r.id
@@ -30,9 +39,10 @@ const ORDER = "ORDER BY r.is_primary_crisis DESC, r.sort_order, r.title";
 
 function createResources(db) {
   return {
-    /** Everything active and UGM-wide; primary crisis contact first. */
+    /** Every active support resource; the primary crisis contact comes first. */
     async listActive() {
-      const { rows } = await db.query(`${SELECT} AND r.faculty IS NULL GROUP BY r.id ${ORDER}`);
+      const { rows } = await db.query(`${SELECT} GROUP BY r.id ${ORDER}`);
+
       return rows.map(toResource);
     },
 
@@ -54,7 +64,9 @@ function createResources(db) {
 
     /** Counselling services a student can book: UGM-wide ones and every faculty's own service. */
     async bookingOptions() {
-      const { rows } = await db.query(`${SELECT} AND r.type = 'counselling' GROUP BY r.id ${ORDER}`);
+      const { rows } = await db.query(
+        `${SELECT} AND r.type = 'counselling' GROUP BY r.id ${ORDER}`,
+      );
       return rows.map(toResource);
     },
   };

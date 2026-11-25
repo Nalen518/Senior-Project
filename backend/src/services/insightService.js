@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const { computeTrend } = require('../logic/trendRules');
-const { composeHelp } = require('../logic/helpRules');
-const { toLocalDate, addDays } = require('../logic/checkDate');
+const { computeTrend } = require("../logic/trendRules");
+const { composeHelp } = require("../logic/helpRules");
+const { toLocalDate, addDays } = require("../logic/checkDate");
 
 const THEMES_WINDOW_DAYS = 14; // FR-13: themes from the last 14 days of notes, including today
 const MAX_THEMES = 3; // FR-13: show at most the top 3
@@ -26,13 +26,20 @@ function createInsightService({ models, config, clock = () => new Date() }) {
     async getInsight(userId) {
       const t = await trend(userId);
       const from = addDays(today(), -(THEMES_WINDOW_DAYS - 1));
-      const [themes, negativeNotes, recentCrisis, bookingOptions] = await Promise.all([
-        models.noteAnalyses.recentThemeCodes(userId, from, MAX_THEMES),
-        models.noteAnalyses.negativeCountSince(userId, from),
-        models.checkins.hasCrisisSince(userId, addDays(today(), -(CRISIS_HELP_DAYS - 1))),
-        models.resources.bookingOptions(),
-      ]);
-      const resources = await models.resources.match({ themeCodes: themes, needsSupport: t.needsSupport || recentCrisis });
+      const [themes, negativeNotes, recentCrisis, bookingOptions] =
+        await Promise.all([
+          models.noteAnalyses.recentThemeCodes(userId, from, MAX_THEMES),
+          models.noteAnalyses.negativeCountSince(userId, from),
+          models.checkins.hasCrisisSince(
+            userId,
+            addDays(today(), -(CRISIS_HELP_DAYS - 1)),
+          ),
+          models.resources.bookingOptions(),
+        ]);
+      const resources = await models.resources.match({
+        themeCodes: themes,
+        needsSupport: t.needsSupport || recentCrisis,
+      });
       const help = composeHelp({
         needsSupport: t.needsSupport,
         themes,
@@ -40,9 +47,24 @@ function createInsightService({ models, config, clock = () => new Date() }) {
         recentCrisis,
         hasBooking: bookingOptions.length > 0,
       });
-      return { trend: t.trend, message: t.message, themes, resources, help: { ...help, booking_options: bookingOptions } };
+      return {
+        trend: t.trend,
+        message: t.message,
+        has_enough_data: t.hasEnoughData,
+        themes,
+        resources,
+        help: {
+          ...help,
+          booking_options: bookingOptions,
+        },
+      };
     },
   };
 }
 
-module.exports = { createInsightService, THEMES_WINDOW_DAYS, MAX_THEMES, CRISIS_HELP_DAYS };
+module.exports = {
+  createInsightService,
+  THEMES_WINDOW_DAYS,
+  MAX_THEMES,
+  CRISIS_HELP_DAYS,
+};

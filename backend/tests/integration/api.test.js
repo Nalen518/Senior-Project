@@ -1,60 +1,91 @@
-'use strict';
+"use strict";
 
 // End-to-end tests of the frozen API contract against a real PostgreSQL database.
 // Runs only when TEST_DATABASE_URL is set, and only if the database name contains "test",
 // because it DROPS and recreates the public schema.
 //   TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/mindmeter_test npm test
 
-const { test, describe, before, after } = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { Pool } = require('pg');
-const { createApp } = require('../../src/app');
+const { test, describe, before, after } = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const { execFileSync } = require("node:child_process");
+const { Pool } = require("pg");
+const { createApp } = require("../../src/app");
 
 const url = process.env.TEST_DATABASE_URL;
-const skip = !url ? 'TEST_DATABASE_URL not set' : !/test/i.test(new URL(url).pathname) ? 'database name must contain "test"' : false;
+const skip = !url
+  ? "TEST_DATABASE_URL not set"
+  : !/test/i.test(new URL(url).pathname)
+    ? 'database name must contain "test"'
+    : false;
 
-const TOKEN = 'integration_test_token_0001';
-const OTHER_TOKEN = 'integration_test_token_0002';
-const CRISIS_PHRASE = 'frasa uji krisis'; // harmless fixture phrase, not a real keyword
+const TOKEN = "integration_test_token_0001";
+const OTHER_TOKEN = "integration_test_token_0002";
+const CRISIS_PHRASE = "frasa uji krisis"; // harmless fixture phrase, not a real keyword
 
-describe('MindMeter API', { skip }, () => {
+describe("MindMeter API", { skip }, () => {
   let pool;
   let server;
   let base;
   const fakeOpenRouter = async () => ({
     ok: true,
-    json: async () => ({ choices: [{ message: { content: '{"sentiment":"negative","score":0.9,"themes":["sleep","workload"]}' } }] }),
+    json: async () => ({
+      choices: [
+        {
+          message: {
+            content:
+              '{"sentiment":"negative","score":0.9,"themes":["sleep","workload"]}',
+          },
+        },
+      ],
+    }),
   });
 
   // Every real response is recorded, then type-checked against shared/contract.ts in the last test.
   const captured = [];
   const call = async (method, route, { body, token = TOKEN } = {}) => {
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['X-Anon-Token'] = token;
-    const res = await fetch(`${base}${route}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["X-Anon-Token"] = token;
+    const res = await fetch(`${base}${route}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
     const result = { status: res.status, body: await res.json() };
-    captured.push({ endpoint: `${method} ${route}`, status: result.status, body: result.body });
+    captured.push({
+      endpoint: `${method} ${route}`,
+      status: result.status,
+      body: result.body,
+    });
     return result;
   };
 
   const waitForAnalysis = async (checkinId) => {
     for (let i = 0; i < 50; i += 1) {
-      const { rows } = await pool.query('SELECT status FROM note_analyses WHERE checkin_id = $1', [checkinId]);
-      if (rows[0] && rows[0].status !== 'pending') return rows[0].status;
+      const { rows } = await pool.query(
+        "SELECT status FROM note_analyses WHERE checkin_id = $1",
+        [checkinId],
+      );
+      if (rows[0] && rows[0].status !== "pending") return rows[0].status;
       await new Promise((r) => setTimeout(r, 20));
     }
-    throw new Error('analysis never finished');
+    throw new Error("analysis never finished");
   };
 
   before(async () => {
     pool = new Pool({ connectionString: url });
-    await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
-    await pool.query(fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql'), 'utf8'));
-    await pool.query('INSERT INTO crisis_keywords (phrase) VALUES ($1)', [CRISIS_PHRASE]);
+    await pool.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+    await pool.query(
+      fs.readFileSync(
+        path.join(__dirname, "..", "..", "src", "models", "schema.sql"),
+        "utf8",
+      ),
+    );
+    await pool.query("INSERT INTO crisis_keywords (phrase) VALUES ($1)", [
+      CRISIS_PHRASE,
+    ]);
     await pool.query(`
       INSERT INTO resources (title, description, phone, type, is_primary_crisis, sort_order)
         VALUES ('Kontak krisis (uji)', 'Kontak uji', '+62 000-0000', 'crisis', true, 0);
@@ -68,11 +99,22 @@ describe('MindMeter API', { skip }, () => {
         VALUES ('Konseling FT (uji)', 'Sumber uji', 'https://example.org/ft', 'counselling', 3, 'engineering');`);
 
     const config = {
-      timeZone: 'Asia/Jakarta',
+      timeZone: "Asia/Jakarta",
       corsOrigins: [],
-      openrouter: { enabled: true, apiKey: 'test', model: 'test/model', baseUrl: 'http://unused', timeoutMs: 1000 },
+      openrouter: {
+        enabled: true,
+        apiKey: "test",
+        model: "test/model",
+        baseUrl: "http://unused",
+        timeoutMs: 1000,
+      },
     };
-    const app = createApp({ db: pool, config, logger: { warn() {}, error() {} }, fetchImpl: fakeOpenRouter });
+    const app = createApp({
+      db: pool,
+      config,
+      logger: { warn() {}, error() {} },
+      fetchImpl: fakeOpenRouter,
+    });
     server = app.listen(0);
     base = `http://127.0.0.1:${server.address().port}`;
   });
@@ -82,155 +124,248 @@ describe('MindMeter API', { skip }, () => {
     await pool?.end();
   });
 
-  test('GET /health', async () => {
+  test("GET /health", async () => {
     const res = await fetch(`${base}/health`);
     assert.equal(res.status, 200);
-    assert.equal((await res.json()).status, 'ok');
+    assert.equal((await res.json()).status, "ok");
   });
 
-  test('401 without X-Anon-Token', async () => {
-    const res = await call('GET', '/api/checkins', { token: null });
+  test("401 without X-Anon-Token", async () => {
+    const res = await call("GET", "/api/checkins", { token: null });
     assert.equal(res.status, 401);
-    assert.equal(res.body.error.code, 'ANON_TOKEN_REQUIRED');
+    assert.equal(res.body.error.code, "ANON_TOKEN_REQUIRED");
   });
 
-  test('400 with the standard error shape for a bad mood', async () => {
-    const res = await call('POST', '/api/checkins', { body: { mood_value: 9 } });
+  test("400 with the standard error shape for a bad mood", async () => {
+    const res = await call("POST", "/api/checkins", {
+      body: { mood_value: 9 },
+    });
     assert.equal(res.status, 400);
-    assert.equal(res.body.error.code, 'VALIDATION_ERROR');
+    assert.equal(res.body.error.code, "VALIDATION_ERROR");
   });
 
-  test('POST /api/checkins returns the contract shape and stores a hashed token only', async () => {
-    const res = await call('POST', '/api/checkins', { body: { mood_value: 2, note_text: 'tugas numpuk, kurang tidur' } });
+  test("POST /api/checkins returns the contract shape and stores a hashed token only", async () => {
+    const res = await call("POST", "/api/checkins", {
+      body: { mood_value: 2, note_text: "tugas numpuk, kurang tidur" },
+    });
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body).sort(), ['crisis_flag', 'id', 'insight', 'saved']);
+    assert.deepEqual(Object.keys(res.body).sort(), [
+      "crisis_flag",
+      "id",
+      "insight",
+      "saved",
+    ]);
     assert.equal(res.body.saved, true);
     assert.equal(res.body.crisis_flag, false);
 
-    const { rows } = await pool.query('SELECT anon_token_hash FROM users');
-    assert.ok(rows.every((r) => r.anon_token_hash !== TOKEN && r.anon_token_hash.length === 64));
+    const { rows } = await pool.query("SELECT anon_token_hash FROM users");
+    assert.ok(
+      rows.every(
+        (r) => r.anon_token_hash !== TOKEN && r.anon_token_hash.length === 64,
+      ),
+    );
 
-    assert.equal(await waitForAnalysis(res.body.id), 'done'); // Stage 2 ran in the background
+    assert.equal(await waitForAnalysis(res.body.id), "done"); // Stage 2 ran in the background
   });
 
-  test('second check-in on the same day updates instead of duplicating', async () => {
-    const token = 'integration_test_token_0003';
-    await call('POST', '/api/checkins', { body: { mood_value: 2 }, token });
-    await call('POST', '/api/checkins', { body: { mood_value: 3 }, token });
-    const list = await call('GET', '/api/checkins', { token });
+  test("second check-in on the same day updates instead of duplicating", async () => {
+    const token = "integration_test_token_0003";
+    await call("POST", "/api/checkins", { body: { mood_value: 2 }, token });
+    await call("POST", "/api/checkins", { body: { mood_value: 3 }, token });
+    const list = await call("GET", "/api/checkins", { token });
     assert.equal(list.status, 200);
     assert.equal(list.body.length, 1);
     assert.equal(list.body[0].mood_value, 3);
-    assert.deepEqual(Object.keys(list.body[0]).sort(), ['created_at', 'id', 'mood_value', 'note_text']);
+    assert.deepEqual(Object.keys(list.body[0]).sort(), [
+      "created_at",
+      "id",
+      "mood_value",
+      "note_text",
+    ]);
   });
 
-  test('crisis note: flagged, no insight, never analysed by the LLM', async () => {
-    const res = await call('POST', '/api/checkins', { body: { mood_value: 1, note_text: `hari ini ${CRISIS_PHRASE}.` }, token: OTHER_TOKEN });
-    assert.deepEqual(Object.keys(res.body).sort(), ['crisis_flag', 'id', 'saved']);
+  test("crisis note: flagged, no insight, never analysed by the LLM", async () => {
+    const res = await call("POST", "/api/checkins", {
+      body: { mood_value: 1, note_text: `hari ini ${CRISIS_PHRASE}.` },
+      token: OTHER_TOKEN,
+    });
+    assert.deepEqual(Object.keys(res.body).sort(), [
+      "crisis_flag",
+      "id",
+      "saved",
+    ]);
     assert.equal(res.body.crisis_flag, true);
     await new Promise((r) => setTimeout(r, 100));
-    const { rows } = await pool.query('SELECT count(*)::int AS n FROM note_analyses WHERE checkin_id = $1', [res.body.id]);
+    const { rows } = await pool.query(
+      "SELECT count(*)::int AS n FROM note_analyses WHERE checkin_id = $1",
+      [res.body.id],
+    );
     assert.equal(rows[0].n, 0);
   });
 
-  test('POST /api/checkins/sync is idempotent and the newer tap wins', async () => {
+  test("POST /api/checkins/sync is idempotent and the newer tap wins", async () => {
     const day = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
     const older = { mood_value: 2, client_ts: `${day}T08:00:00+07:00` };
     const newer = { mood_value: 4, client_ts: `${day}T20:00:00+07:00` };
 
-    const first = await call('POST', '/api/checkins/sync', { body: [newer, older] });
+    const first = await call("POST", "/api/checkins/sync", {
+      body: [newer, older],
+    });
     assert.equal(first.status, 200);
-    assert.deepEqual(first.body.map((r) => r.client_ts), [newer.client_ts, older.client_ts]);
+    assert.deepEqual(
+      first.body.map((r) => r.client_ts),
+      [newer.client_ts, older.client_ts],
+    );
     assert.ok(first.body.every((r) => r.saved === true));
     assert.equal(first.body[0].id, first.body[1].id); // same day, same row
 
-    await call('POST', '/api/checkins/sync', { body: [newer, older] }); // re-sent queue
+    await call("POST", "/api/checkins/sync", { body: [newer, older] }); // re-sent queue
     const { rows } = await pool.query(
-      `SELECT mood_value, source FROM checkins c JOIN users u ON u.id = c.user_id WHERE c.check_date = $1`, [day]);
-    assert.deepEqual(rows, [{ mood_value: 4, source: 'offline_sync' }]);
+      `SELECT mood_value, source FROM checkins c JOIN users u ON u.id = c.user_id WHERE c.check_date = $1`,
+      [day],
+    );
+    assert.deepEqual(rows, [{ mood_value: 4, source: "offline_sync" }]);
   });
 
-  test('GET /api/insights returns trend, message, themes from Stage 2, matched resources', async () => {
-    const res = await call('GET', '/api/insights');
+  test("GET /api/insights returns trend, message, themes from Stage 2, matched resources", async () => {
+    const res = await call("GET", "/api/insights");
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body).sort(), ['help', 'message', 'resources', 'themes', 'trend']);
-    assert.ok(['stable', 'declining', 'improving'].includes(res.body.trend));
-    assert.deepEqual(res.body.themes, ['sleep', 'workload']);
-    assert.equal(res.body.resources[0].title, 'Tips tidur (uji)');
+    assert.deepEqual(Object.keys(res.body).sort(), [
+      "has_enough_data",
+      "help",
+      "message",
+      "resources",
+      "themes",
+      "trend",
+    ]);
+    assert.ok(["stable", "declining", "improving"].includes(res.body.trend));
+    assert.deepEqual(res.body.themes, ["sleep", "workload"]);
+    assert.equal(res.body.resources[0].title, "Tips tidur (uji)");
   });
 
-  test('GET /api/insights help card: pre-written message, UGM-wide and faculty booking options', async () => {
-    const { help } = (await call('GET', '/api/insights')).body;
-    assert.deepEqual(Object.keys(help).sort(), ['booking_options', 'message', 'suggest_booking']);
+  test("GET /api/insights help card: pre-written message, UGM-wide and faculty booking options", async () => {
+    const { help } = (await call("GET", "/api/insights")).body;
+    assert.deepEqual(Object.keys(help).sort(), [
+      "booking_options",
+      "message",
+      "suggest_booking",
+    ]);
     assert.match(help.message, /^Sleep came up in your notes\./);
-    assert.deepEqual(help.booking_options.map((r) => [r.title, r.faculty]),
-      [['Konseling UGM (uji)', null], ['Konseling FT (uji)', 'engineering']]);
+    assert.deepEqual(
+      help.booking_options.map((r) => [r.title, r.faculty]),
+      [
+        ["Konseling UGM (uji)", null],
+        ["Konseling FT (uji)", "engineering"],
+      ],
+    );
   });
 
-  test('GET /api/insights after a crisis check-in: reach-out message, crisis contact first', async () => {
-    const res = await call('GET', '/api/insights', { token: OTHER_TOKEN });
+  test("GET /api/insights after a crisis check-in: reach-out message, crisis contact first", async () => {
+    const res = await call("GET", "/api/insights", { token: OTHER_TOKEN });
     assert.match(res.body.help.message, /^Please reach out/);
     assert.equal(res.body.help.suggest_booking, true);
-    assert.equal(res.body.resources[0].title, 'Kontak krisis (uji)');
+    assert.equal(res.body.resources[0].title, "Kontak krisis (uji)");
   });
 
-  test('GET /api/resources works WITHOUT a token: support is always reachable', async () => {
-    const res = await call('GET', '/api/resources', { token: null });
+  test("GET /api/resources works WITHOUT a token: support is always reachable", async () => {
+    const res = await call("GET", "/api/resources", { token: null });
     assert.equal(res.status, 200);
     assert.ok(res.body.length > 0);
   });
 
-  test('GET /api/resources: primary crisis contact first, phone as tel: link', async () => {
-    const res = await call('GET', '/api/resources');
+  test("GET /api/resources: primary crisis contact first, phone as tel: link", async () => {
+    const res = await call("GET", "/api/resources");
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'faculty', 'id', 'tags', 'title', 'url']);
-    assert.equal(res.body[0].url, 'tel:+620000000');
-    assert.deepEqual(res.body[1].tags, ['sleep']);
+    assert.deepEqual(Object.keys(res.body[0]).sort(), [
+      "description",
+      "faculty",
+      "id",
+      "tags",
+      "title",
+      "url",
+    ]);
+    assert.equal(res.body[0].url, "tel:+620000000");
+    assert.deepEqual(res.body[1].tags, ["sleep"]);
   });
 
-  test('GET /api/resources leaves out faculty-only services (they would turn other students away)', async () => {
-    const res = await call('GET', '/api/resources');
-    assert.ok(res.body.every((r) => r.faculty === null));
-    assert.equal(res.body.some((r) => r.title === 'Konseling FT (uji)'), false);
+  test("GET /api/resources includes active faculty counselling services", async () => {
+    const res = await call("GET", "/api/resources");
+
+    assert.equal(
+      res.body.some(
+        (resource) =>
+          resource.title === "Konseling FT (uji)" &&
+          resource.faculty === "engineering",
+      ),
+      true,
+    );
   });
 
-  test('rate limit: 429 RATE_LIMITED after the limit, but /api/resources always answers', async () => {
+  test("rate limit: 429 RATE_LIMITED after the limit, but /api/resources always answers", async () => {
     const limited = createApp({
       db: pool,
-      config: { timeZone: 'Asia/Jakarta', corsOrigins: [], rateLimit: { limit: 3, windowMs: 60_000 }, openrouter: { enabled: false } },
+      config: {
+        timeZone: "Asia/Jakarta",
+        corsOrigins: [],
+        rateLimit: { limit: 3, windowMs: 60_000 },
+        openrouter: { enabled: false },
+      },
       logger: { warn() {}, error() {} },
     }).listen(0);
     try {
-      const get = (route) => fetch(`http://127.0.0.1:${limited.address().port}${route}`, { headers: { 'X-Anon-Token': TOKEN } });
-      for (let i = 0; i < 3; i += 1) assert.equal((await get('/api/insights')).status, 200);
-      const blocked = await get('/api/insights');
+      const get = (route) =>
+        fetch(`http://127.0.0.1:${limited.address().port}${route}`, {
+          headers: { "X-Anon-Token": TOKEN },
+        });
+      for (let i = 0; i < 3; i += 1)
+        assert.equal((await get("/api/insights")).status, 200);
+      const blocked = await get("/api/insights");
       assert.equal(blocked.status, 429);
-      assert.equal((await blocked.json()).error.code, 'RATE_LIMITED');
-      assert.ok(Number(blocked.headers.get('retry-after')) > 0);
-      assert.equal((await get('/api/resources')).status, 200);
+      assert.equal((await blocked.json()).error.code, "RATE_LIMITED");
+      assert.ok(Number(blocked.headers.get("retry-after")) > 0);
+      assert.equal((await get("/api/resources")).status, 200);
     } finally {
       limited.close();
     }
   });
 
-  test('failure drill (MM-507): with no OpenRouter key, check-in and insights still work and nothing is analysed', async () => {
+  test("failure drill (MM-507): with no OpenRouter key, check-in and insights still work and nothing is analysed", async () => {
     const off = createApp({
       db: pool,
-      config: { timeZone: 'Asia/Jakarta', corsOrigins: [], openrouter: { enabled: false } },
+      config: {
+        timeZone: "Asia/Jakarta",
+        corsOrigins: [],
+        openrouter: { enabled: false },
+      },
       logger: { warn() {}, error() {} },
     }).listen(0);
     try {
       const base2 = `http://127.0.0.1:${off.address().port}`;
-      const headers = { 'Content-Type': 'application/json', 'X-Anon-Token': 'integration_test_token_0004' };
-      const saved = await fetch(`${base2}/api/checkins`, { method: 'POST', headers, body: JSON.stringify({ mood_value: 3, note_text: 'catatan uji tanpa AI' }) });
+      const headers = {
+        "Content-Type": "application/json",
+        "X-Anon-Token": "integration_test_token_0004",
+      };
+      const saved = await fetch(`${base2}/api/checkins`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          mood_value: 3,
+          note_text: "catatan uji tanpa AI",
+        }),
+      });
       assert.equal(saved.status, 200);
       const body = await saved.json();
       assert.equal(body.saved, true);
       await new Promise((r) => setTimeout(r, 100));
-      const { rows } = await pool.query('SELECT count(*)::int AS n FROM note_analyses WHERE checkin_id = $1', [body.id]);
+      const { rows } = await pool.query(
+        "SELECT count(*)::int AS n FROM note_analyses WHERE checkin_id = $1",
+        [body.id],
+      );
       assert.equal(rows[0].n, 0);
 
-      const insight = await (await fetch(`${base2}/api/insights`, { headers })).json();
+      const insight = await (
+        await fetch(`${base2}/api/insights`, { headers })
+      ).json();
       assert.deepEqual(insight.themes, []);
       assert.ok(insight.help.message.length > 0);
     } finally {
@@ -238,42 +373,80 @@ describe('MindMeter API', { skip }, () => {
     }
   });
 
-  test('every table has row level security on, so the Supabase public API reads nothing', async () => {
+  test("every table has row level security on, so the Supabase public API reads nothing", async () => {
     const { rows } = await pool.query(
-      "SELECT relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity");
+      "SELECT relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity",
+    );
     assert.deepEqual(rows, []);
   });
 
   // Rule 4 of the development plan: the backend (JavaScript) must match shared/contract.ts exactly.
   // Every response recorded above is written into a .ts file as `<json> satisfies <ContractType>`
   // and compiled. A missing, renamed, extra or wrongly-typed field fails this test (and CI).
-  test('every response above matches shared/contract.ts', () => {
+  test("every response above matches shared/contract.ts", () => {
     const TYPE_FOR = {
-      'POST /api/checkins': 'CheckinResponse',
-      'POST /api/checkins/sync': 'SyncResponse',
-      'GET /api/checkins': 'CheckinListResponse',
-      'GET /api/insights': 'InsightResponse',
-      'GET /api/resources': 'ResourcesResponse',
+      "POST /api/checkins": "CheckinResponse",
+      "POST /api/checkins/sync": "SyncResponse",
+      "GET /api/checkins": "CheckinListResponse",
+      "GET /api/insights": "InsightResponse",
+      "GET /api/resources": "ResourcesResponse",
     };
-    const covered = new Set(captured.filter((c) => c.status < 400).map((c) => c.endpoint));
-    assert.deepEqual([...covered].sort(), Object.keys(TYPE_FOR).sort(), 'every endpoint needs at least one successful sample');
+    const covered = new Set(
+      captured.filter((c) => c.status < 400).map((c) => c.endpoint),
+    );
+    assert.deepEqual(
+      [...covered].sort(),
+      Object.keys(TYPE_FOR).sort(),
+      "every endpoint needs at least one successful sample",
+    );
 
-    const contract = path.resolve(__dirname, '..', '..', '..', 'shared', 'contract');
-    const typeNames = [...new Set([...Object.values(TYPE_FOR), 'ApiErrorResponse'])];
-    const lines = [`import type { ${typeNames.join(', ')} } from ${JSON.stringify(contract)};`];
+    const contract = path.resolve(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "shared",
+      "contract",
+    );
+    const typeNames = [
+      ...new Set([...Object.values(TYPE_FOR), "ApiErrorResponse"]),
+    ];
+    const lines = [
+      `import type { ${typeNames.join(", ")} } from ${JSON.stringify(contract)};`,
+    ];
     captured.forEach((c, i) => {
-      const type = c.status >= 400 ? 'ApiErrorResponse' : TYPE_FOR[c.endpoint];
-      lines.push(`// ${c.status} ${c.endpoint}`, `export const sample${i} = ${JSON.stringify(c.body)} satisfies ${type};`);
+      const type = c.status >= 400 ? "ApiErrorResponse" : TYPE_FOR[c.endpoint];
+      lines.push(
+        `// ${c.status} ${c.endpoint}`,
+        `export const sample${i} = ${JSON.stringify(c.body)} satisfies ${type};`,
+      );
     });
 
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mindmeter-contract-'));
-    const file = path.join(dir, 'responses.ts');
-    fs.writeFileSync(file, lines.join('\n'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mindmeter-contract-"));
+    const file = path.join(dir, "responses.ts");
+    fs.writeFileSync(file, lines.join("\n"));
     try {
-      execFileSync(process.execPath, [require.resolve('typescript/bin/tsc'), '--noEmit', '--strict', '--skipLibCheck',
-        '--target', 'es2022', '--module', 'commonjs', '--moduleResolution', 'node', file], { encoding: 'utf8' });
+      execFileSync(
+        process.execPath,
+        [
+          require.resolve("typescript/bin/tsc"),
+          "--noEmit",
+          "--strict",
+          "--skipLibCheck",
+          "--target",
+          "es2022",
+          "--module",
+          "commonjs",
+          "--moduleResolution",
+          "node",
+          file,
+        ],
+        { encoding: "utf8" },
+      );
     } catch (err) {
-      assert.fail(`API responses do not match shared/contract.ts:\n${err.stdout || err.message}`);
+      assert.fail(
+        `API responses do not match shared/contract.ts:\n${err.stdout || err.message}`,
+      );
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

@@ -13,6 +13,9 @@ export const Hero = () => {
   const [resourceSource, setResourceSource] = useState<"api" | "offline">(
     "api",
   );
+  const crisisResources = resources.filter(
+    (resource) => resource.support_group === "crisis",
+  );
 
   useEffect(() => {
     const loadResources = async () => {
@@ -27,6 +30,8 @@ export const Hero = () => {
             description: resource.description,
             url: resource.url,
             tags: resource.tags,
+            faculty: resource.faculty,
+            support_group: resource.support_group,
           })),
         );
         setResourceSource("offline");
@@ -73,7 +78,7 @@ export const Hero = () => {
                 details may have changed since they were verified.
               </p>
             )}
-            
+
             <div className="mt-3 space-y-2">
               {isLoading && (
                 <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
@@ -90,14 +95,14 @@ export const Hero = () => {
                 </p>
               )}
 
-              {!isLoading && !errorMessage && resources.length === 0 && (
+              {!isLoading && !errorMessage && crisisResources.length === 0 && (
                 <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
                   Support contacts will appear here once they have been
                   verified.
                 </p>
               )}
 
-              {resources.map((resource) => {
+              {crisisResources.map((resource) => {
                 const isPhoneLink = resource.url.startsWith("tel:");
                 const actionLabel = isPhoneLink ? "Call" : "Open";
 
@@ -133,37 +138,81 @@ export const Hero = () => {
             <h2 className="font-serif text-lg font-bold">
               Talk to a counsellor
             </h2>
+
             <p className="mt-1 text-sm text-[#3D4D59]">
-              Support contacts are listed above. More detailed groups will be
-              added when the API provides each service category.
+              Find a counselling service that feels right for you.
             </p>
 
-            <details className="mt-3 border-b border-[#B8C0C3] py-3">
-              <summary className="cursor-pointer font-serif font-bold">
-                University services
-              </summary>
-              <p className="mt-2 text-sm text-[#3D4D59]">
-                University counselling services will appear here.
-              </p>
-            </details>
+            {[
+              {
+                title: "University services",
+                group: "university",
+                empty:
+                  "No university-wide counselling services are available yet.",
+              },
+              {
+                title: "Faculty services",
+                group: "faculty",
+                empty:
+                  "Choose your faculty on the dashboard to see relevant faculty counselling services.",
+              },
+              {
+                title: "Clinics",
+                group: "clinic",
+                empty: "No clinic contacts are available yet.",
+              },
+            ].map(({ title, group, empty }) => {
+              const groupResources = resources.filter(
+                (resource) => resource.support_group === group,
+              );
 
-            <details className="border-b border-[#B8C0C3] py-3">
-              <summary className="cursor-pointer font-serif font-bold">
-                Faculty services
-              </summary>
-              <p className="mt-2 text-sm text-[#3D4D59]">
-                Faculty counselling services will appear here.
-              </p>
-            </details>
+              return (
+                <details
+                  key={group}
+                  className="mt-3 border-b border-[#B8C0C3] py-3"
+                >
+                  <summary className="cursor-pointer font-serif font-bold">
+                    {title}
+                  </summary>
 
-            <details className="border-b border-[#B8C0C3] py-3">
-              <summary className="cursor-pointer font-serif font-bold">
-                Clinics
-              </summary>
-              <p className="mt-2 text-sm text-[#3D4D59]">
-                Clinic contacts will appear here.
-              </p>
-            </details>
+                  <div className="mt-3 space-y-3">
+                    {groupResources.length === 0 ? (
+                      <p className="text-sm text-[#3D4D59]">{empty}</p>
+                    ) : (
+                      groupResources.map((resource) => {
+                        const isPhoneLink = resource.url.startsWith("tel:");
+
+                        return (
+                          <article
+                            key={resource.id}
+                            className="flex flex-col gap-3 rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div>
+                              <h3 className="font-serif font-bold">
+                                {resource.title}
+                              </h3>
+
+                              <p className="mt-1 text-sm text-[#3D4D59]">
+                                {resource.description}
+                              </p>
+                            </div>
+
+                            <a
+                              href={resource.url}
+                              target={isPhoneLink ? undefined : "_blank"}
+                              rel={isPhoneLink ? undefined : "noreferrer"}
+                              className="shrink-0 rounded-lg bg-[#F6A15E] px-5 py-2 text-center text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                            >
+                              {isPhoneLink ? "Call" : "Open"}
+                            </a>
+                          </article>
+                        );
+                      })
+                    )}
+                  </div>
+                </details>
+              );
+            })}
           </section>
 
           <p className="mt-8 text-xs text-[#5E6A70]">

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // Orchestrates a check-in. The order here IS the safety rule from the PRD:
 //   1. crisis keyword check (our own code)
@@ -6,12 +6,21 @@
 //   3. crisis? -> stop. No AI output, no LLM call. Client shows the support screen.
 //   4. otherwise: rule-based insight now, Stage 2 NLP later in the background.
 
-const { toLocalDate } = require('../logic/checkDate');
+const { toLocalDate } = require("../logic/checkDate");
 
-function createCheckinService({ models, crisis, nlp, insights, config, clock = () => new Date() }) {
+function createCheckinService({
+  models,
+  crisis,
+  nlp,
+  insights,
+  config,
+  clock = () => new Date(),
+}) {
   async function saveOne(userId, entry, source) {
     const clientTs = entry.client_ts ?? clock();
-    const crisisFlag = entry.note_text ? await crisis.check(entry.note_text) : false;
+    const crisisFlag = entry.note_text
+      ? await crisis.check(entry.note_text)
+      : false;
 
     const { id, applied } = await models.checkins.upsert({
       userId,
@@ -36,10 +45,37 @@ function createCheckinService({ models, crisis, nlp, insights, config, clock = (
   return {
     /** POST /api/checkins -> { id, saved, insight?, crisis_flag } */
     async submit(userId, entry) {
-      const { id, crisisFlag } = await saveOne(userId, entry, 'online');
-      if (crisisFlag) return { id, saved: true, crisis_flag: true };
+      const { id, applied, crisisFlag } = await saveOne(
+        userId,
+        entry,
+        "online",
+      );
+
+      // A newer check-in for this WIB day already exists.
+      if (!applied) {
+        return {
+          id,
+          saved: false,
+          crisis_flag: crisisFlag,
+        };
+      }
+
+      if (crisisFlag) {
+        return {
+          id,
+          saved: true,
+          crisis_flag: true,
+        };
+      }
+
       const { message } = await insights.trend(userId);
-      return { id, saved: true, insight: message, crisis_flag: false };
+
+      return {
+        id,
+        saved: true,
+        insight: message,
+        crisis_flag: false,
+      };
     },
 
     /**
@@ -48,11 +84,22 @@ function createCheckinService({ models, crisis, nlp, insights, config, clock = (
      * check-in for that day already exists. crisis_flag reflects the note that was sent.
      */
     async sync(userId, entries, rawClientTs) {
-      const order = entries.map((_, i) => i).sort((a, b) => entries[a].client_ts - entries[b].client_ts);
+      const order = entries
+        .map((_, i) => i)
+        .sort((a, b) => entries[a].client_ts - entries[b].client_ts);
       const results = new Array(entries.length);
       for (const i of order) {
-        const { id, crisisFlag } = await saveOne(userId, entries[i], 'offline_sync');
-        results[i] = { client_ts: rawClientTs[i], id, saved: true, crisis_flag: crisisFlag };
+        const { id, crisisFlag } = await saveOne(
+          userId,
+          entries[i],
+          "offline_sync",
+        );
+        results[i] = {
+          client_ts: rawClientTs[i],
+          id,
+          saved: true,
+          crisis_flag: crisisFlag,
+        };
       }
       return results;
     },

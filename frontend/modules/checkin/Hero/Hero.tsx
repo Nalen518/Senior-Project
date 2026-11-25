@@ -58,13 +58,21 @@ export const Hero = () => {
       }
 
       if (outcome.response.crisis_flag) {
-        router.push("/support");
+        router.push("/crisis");
+        return;
+      }
+
+      if (!outcome.response.saved) {
+        setErrorMessage(
+          "This check-in was not saved because a newer check-in already exists for today.",
+        );
         return;
       }
 
       setSavedTitle("Check-in saved");
       setSavedMessage(outcome.response.insight);
       setIsSaved(true);
+      
     } catch {
       setErrorMessage(
         "We could not save your check-in. Please try again in a moment.",
