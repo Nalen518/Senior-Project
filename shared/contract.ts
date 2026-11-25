@@ -35,12 +35,15 @@ export type ThemeCode =
 export type Trend = 'stable' | 'declining' | 'improving';
 
 /** A support contact or self-help resource. The primary crisis contact always comes first. */
+//export type ResourceType = "crisis" | "counselling" | "self_help";
+
 export interface Resource {
   id: Uuid;
   title: string;
   description: string;
   /** "https://..." for websites, or "tel:+62..." for phone-only contacts. */
   url: string;
+  //type: ResourceType;
   tags: ThemeCode[];
   /** null = open to all UGM students. Otherwise only that faculty's students can use it. */
   faculty: FacultyCode | null;
