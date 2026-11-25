@@ -92,6 +92,7 @@ export const Hero = () => {
   const [selectedFaculty, setSelectedFaculty] = useState<FacultyCode | null>(
     null,
   );
+  const [showTodayReminder, setShowTodayReminder] = useState(false);
 
   const hasNoCheckins =
     !isLoading &&
@@ -111,7 +112,8 @@ export const Hero = () => {
   }, []);
 
   const loadDashboard = useCallback(async () => {
-    setQueuedItems(readQueue());
+    const queuedCheckins = readQueue();
+    setQueuedItems(queuedCheckins);
 
     try {
       setErrorMessage("");
@@ -123,6 +125,18 @@ export const Hero = () => {
 
       setCheckins(checkinData);
       setInsight(insightData);
+
+      const today = jakartaDateKey(new Date());
+
+      const hasSavedCheckinToday = checkinData.some(
+        (checkin) => jakartaDateKey(checkin.created_at) === today,
+      );
+
+      const hasQueuedCheckinToday = queuedCheckins.some(
+        (checkin) => jakartaDateKey(checkin.client_ts) === today,
+      );
+
+      setShowTodayReminder(!hasSavedCheckinToday && !hasQueuedCheckinToday);
     } catch {
       setErrorMessage(
         navigator.onLine
@@ -276,6 +290,36 @@ export const Hero = () => {
   return (
     <>
       <main className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-[#1F3347] sm:px-6">
+        {showTodayReminder && (
+          <div className="fixed inset-0 z-[45] flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
+              <h2 className="font-serif text-2xl font-bold text-[#1F3347]">
+                You have not checked in today
+              </h2>
+
+              <p className="mt-2 text-sm text-[#3D4D59]">
+                Take a moment to record how you are feeling today.
+              </p>
+
+              <div className="mt-6 flex flex-col gap-3">
+                <Link
+                  href="/"
+                  className="w-full rounded-xl bg-[#2A9D90] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#238479]"
+                >
+                  Go to today&apos;s check-in
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setShowTodayReminder(false)}
+                  className="w-full rounded-xl border border-gray-300 bg-white py-3 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-gray-50"
+                >
+                  Stay on dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="pointer-events-none absolute -left-12 top-16 h-28 w-28 rounded-full bg-[#E4A79A]" />
         <div className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 rounded-full bg-[#ECE1BE]" />
         <div className="pointer-events-none absolute -right-10 top-36 h-32 w-32 rounded-full bg-[#D3C1E5]" />
@@ -570,7 +614,7 @@ export const Hero = () => {
                 </section>
               ) : null}
 
-              <section className="mt-6 rounded-xl border border-[#D5E1E2] bg-white p-4">
+              {/* <section className="mt-6 rounded-xl border border-[#D5E1E2] bg-white p-4">
                 <h2 className="font-serif text-lg font-bold">
                   Find a counsellor
                 </h2>
@@ -642,8 +686,8 @@ export const Hero = () => {
                     })
                   )}
                 </div>
-              </section>
-              
+              </section> */}
+
               <section className="mt-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-baseline gap-2">

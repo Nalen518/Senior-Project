@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { submitOrQueue, readQueue } from "@/lib/syncQueue";
+import { api } from "@/lib/api";
+import { AlreadyCheckedIn } from "./AlreadyCheckedIn";
 import { Saved } from "./Saved";
-import { submitOrQueue } from "@/lib/syncQueue";
 
 const moods = [
   { value: 1, label: "Very low", color: "bg-[#D96B5B]" },
@@ -15,6 +17,23 @@ const moods = [
 ] as const;
 
 type MoodValue = (typeof moods)[number]["value"];
+type Checkin = Awaited<ReturnType<typeof api.listCheckins>>[number];
+type TodayCheckin = Pick<Checkin, "mood_value" | "note_text">;
+
+function jakartaDateKey(value: string | Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(value));
+
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  return `${year}-${month}-${day}`;
+}
 
 export const Hero = () => {
   const router = useRouter();
@@ -25,12 +44,77 @@ export const Hero = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [savedTitle, setSavedTitle] = useState("Check-in saved");
+  const [existingCheckin, setExistingCheckin] = useState<TodayCheckin | null>(
+    null,
+  );
+  const [showAlreadyCheckedIn, setShowAlreadyCheckedIn] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const maxChars = 200;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadTodayCheckin = async () => {
+      const today = jakartaDateKey(new Date());
+
+      const queuedToday =
+        readQueue().find(
+          (checkin) => jakartaDateKey(checkin.client_ts) === today,
+        ) ?? null;
+
+      try {
+        const checkins = await api.listCheckins();
+
+        const savedToday =
+          checkins.find(
+            (checkin) => jakartaDateKey(checkin.created_at) === today,
+          ) ?? null;
+
+        // A queued entry is newer local work, so prefer it over a server entry.
+        const currentCheckin = queuedToday ?? savedToday;
+
+        if (!cancelled && currentCheckin) {
+          setExistingCheckin({
+            mood_value: currentCheckin.mood_value,
+            note_text: currentCheckin.note_text ?? null,
+          });
+
+          setShowAlreadyCheckedIn(true);
+        }
+      } catch {
+        // Offline: still show the update popup if this browser has a queued entry.
+        if (!cancelled && queuedToday) {
+          setExistingCheckin({
+            mood_value: queuedToday.mood_value,
+            note_text: queuedToday.note_text ?? null,
+          });
+
+          setShowAlreadyCheckedIn(true);
+        }
+      }
+    };
+
+    void loadTodayCheckin();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= maxChars) {
       setNote(e.target.value);
     }
+  };
+
+  const handleStartUpdate = () => {
+    if (!existingCheckin) return;
+
+    setSelectedMood(existingCheckin.mood_value);
+    setNote(existingCheckin.note_text ?? "");
+    setIsUpdating(true);
+    setShowAlreadyCheckedIn(false);
   };
 
   const handleSave = async () => {
@@ -49,10 +133,18 @@ export const Hero = () => {
       });
 
       if (outcome.kind === "queued") {
-        setSavedTitle("Saved on this device");
-        setSavedMessage(
-          "Saved on this device. It will be sent when you are back online.",
+        setSavedTitle(
+          outcome.replaced
+            ? "Offline check-in updated"
+            : "Saved on this device",
         );
+
+        setSavedMessage(
+          outcome.replaced
+            ? "Your saved offline check-in was updated. The newest version will sync when you reconnect."
+            : "Saved on this device. It will be sent when you are back online.",
+        );
+
         setIsSaved(true);
         return;
       }
@@ -69,10 +161,9 @@ export const Hero = () => {
         return;
       }
 
-      setSavedTitle("Check-in saved");
+      setSavedTitle(isUpdating ? "Check-in updated" : "Check-in saved");
       setSavedMessage(outcome.response.insight);
       setIsSaved(true);
-      
     } catch {
       setErrorMessage(
         "We could not save your check-in. Please try again in a moment.",
@@ -222,7 +313,13 @@ export const Hero = () => {
             disabled={isSaving}
             className="mt-6 w-full rounded-lg bg-[#A3D9D9] py-3 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-[#8ECFCE] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSaving ? "Saving..." : "Save check-in"}
+            {isSaving
+              ? isUpdating
+                ? "Updating..."
+                : "Saving..."
+              : isUpdating
+                ? "Update check-in"
+                : "Save check-in"}
           </button>
 
           {errorMessage && (
@@ -231,8 +328,10 @@ export const Hero = () => {
             </p>
           )}
 
-          <p className={`mt-2 text-xs  text-gray-500`}>
-            One check-in per day. Pick a mood to save.
+          <p className="mt-2 text-xs text-gray-500">
+            {isUpdating
+              ? "You are updating today’s check-in."
+              : "One check-in per day. Pick a mood to save."}
           </p>
 
           {/* Need to talk to someone Button */}
@@ -245,6 +344,13 @@ export const Hero = () => {
           </Link>
         </div>
       </section>
+
+      {showAlreadyCheckedIn && existingCheckin && (
+        <AlreadyCheckedIn
+          note={existingCheckin.note_text}
+          onUpdate={handleStartUpdate}
+        />
+      )}
 
       <Saved
         isOpen={isSaved}
