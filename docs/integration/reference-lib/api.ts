@@ -10,7 +10,7 @@ import type {
 } from '../../../shared/contract';
 import { getAnonToken } from './anonToken';
 
-// Set in frontend/.env.local (local) and in the Static Web Apps build settings (Azure).
+// Set in frontend/.env.local (local) and in the Vercel project settings (hosted).
 // Read inside a function so tests can change it; Next.js still inlines it at build time.
 const baseUrl = () => process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 

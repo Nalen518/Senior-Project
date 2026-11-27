@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// Load backend/.env in development (Azure App Service provides real env vars instead).
+// Load backend/.env in development (the host provides real env vars instead).
 const envFile = path.join(__dirname, '..', '.env');
 if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
 
@@ -19,7 +19,7 @@ const server = app.listen(config.port, () => {
   console.log(`MindMeter API listening on port ${config.port} (NLP ${config.openrouter.enabled ? 'on' : 'off'})`);
 });
 
-// Azure restarts send SIGTERM: finish open requests, then close the database pool.
+// Host restarts and deploys send SIGTERM: finish open requests, then close the database pool.
 function shutdown(signal) {
   console.log(`${signal} received, shutting down`);
   server.close(() => pool.end().finally(() => process.exit(0)));

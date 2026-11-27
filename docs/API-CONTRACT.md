@@ -23,13 +23,13 @@ Tested reference code for the frontend side is in [`docs/integration/reference-l
 
 | Topic | Rule |
 |-------|------|
-| Base URL | Local API `http://localhost:3000` (frontend runs on `http://localhost:3001`, set `NEXT_PUBLIC_API_URL`). Production: the Azure App Service URL, HTTPS. |
+| Base URL | Local API `http://localhost:3000` (frontend runs on `http://localhost:3001`, set `NEXT_PUBLIC_API_URL`). Production: the Railway URL, HTTPS. |
 | Format | JSON in and out, UTF-8, `snake_case` fields. Request body limit 32 KB. Unknown request fields are ignored. |
 | IDs | `id` is a UUID string. Treat it as opaque. |
 | Timestamps | ISO 8601, e.g. `2026-10-19T09:15:00+07:00` or `...Z`. |
 | "Day" | A check-in day is the calendar date in **Asia/Jakarta (WIB)**, derived by the backend from `client_ts` (or its own clock). |
 | Language | **Product language is English** (team decision). `message` and resource text are display-ready English; show as given. Users may still type notes in Indonesian or English, so the crisis check and the NLP step must handle both (§5.2, §5.7). |
-| CORS | Allowed origins come from the backend `CORS_ORIGIN` env var (required in production; set it to the Static Web Apps URL). |
+| CORS | Allowed origins come from the backend `CORS_ORIGIN` env var (required in production; set it to the Vercel URL). |
 | Security headers | `helmet` is on. |
 
 ## 2. Identity (anonymous token)
@@ -56,7 +56,7 @@ X-Anon-Token: 3f1c2a0e-8d2b-4c58-9a77-5d6f0e1b9c11
 | E3 | `GET /api/checkins` | yes | The user's check-ins for the dashboard |
 | E4 | `GET /api/insights` | yes | Trend message, themes, matched resources |
 | E5 | `GET /api/resources` | **no** | Support and self-help resources |
-| — | `GET /health` | no | Azure health check. **Not part of the frontend contract.** |
+| — | `GET /health` | no | Host health check. **Not part of the frontend contract.** |
 
 Exact request/response types: `shared/contract.ts` (`CheckinRequest`, `CheckinResponse`, `SyncRequest`, `SyncResponse`, `CheckinListResponse`, `InsightResponse`, `ResourcesResponse`, `ApiErrorResponse`, and the `Endpoints` map). Examples: [API-REFERENCE.md](./API-REFERENCE.md).
 
@@ -169,7 +169,7 @@ An OpenRouter failure never produces an error response.
 
 | Gap | Impact | Suggested handling |
 |-----|--------|--------------------|
-| `GET /health` lives outside `/api` | None for the frontend | Keep; use it as the App Service health-check path |
+| `GET /health` lives outside `/api` | None for the frontend | Keep; use it as the Railway health check path |
 | Sync is all-or-nothing | One bad queued item blocks the rest unless the frontend drops it | Frontend rule in §5.3; or make the backend per-item later via a `contract-change` |
 | Crisis list/contacts not yet reviewed and loaded | Crisis path inactive | Team review, then `npm run db:seed-safety` (see §5.2) |
 | Backend text still Indonesian (trend templates in `trendRules.js`, resource descriptions in `data/resources.json`, `label_id` in `schema.sql`, comment in `contract.ts`) | UI would mix languages | Translate in one small PR; behaviour and types do not change, but update the tests that assert the message text (PROJECT-PLAN MM-111) |
