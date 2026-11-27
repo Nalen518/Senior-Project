@@ -27,6 +27,7 @@ export const Hero = () => {
             description: resource.description,
             url: resource.url,
             tags: resource.tags,
+            faculty: resource.faculty,
           })),
         );
         setResourceSource("offline");
