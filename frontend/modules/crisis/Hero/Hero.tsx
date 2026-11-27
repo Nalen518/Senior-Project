@@ -31,7 +31,7 @@ export const Hero= () => {
               <p className="text-xs md:text-sm text-[#4A5568]">UGM mental health emergency line, 24 hours on WhatsApp</p>
             </div>
             <a 
-              href="#" 
+              href="https://wa.me/6281329520052" target="_blank" rel="noopener noreferrer"
               className="px-5 py-2 bg-[#F19F65] hover:bg-[#e08e54] text-[#142B47] font-semibold rounded-md transition-colors"
             >
               Chat
@@ -59,7 +59,7 @@ export const Hero= () => {
               <p className="text-xs md:text-sm text-[#4A5568]">National support line from the Ministry of Health</p>
             </div>
             <a 
-              href="#" 
+              href="https://www.healing119.id/" target="_blank" rel="noopener noreferrer"
               className="px-5 py-2 bg-[#F19F65] hover:bg-[#e08e54] text-[#142B47] font-semibold rounded-md transition-colors"
             >
               Open
@@ -78,7 +78,7 @@ export const Hero= () => {
 
         {/* Back Button */}
         <Link 
-          href="/mindmeter"
+          href="/"
           className="px-6 py-2.5 bg-white border border-[#CBD5E0] hover:bg-gray-50 text-[#142B47] font-semibold rounded-md shadow-sm transition-colors"
         >
           Back to MindMeter

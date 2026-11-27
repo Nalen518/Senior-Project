@@ -24,7 +24,7 @@ function loadConfig(env = process.env) {
     dbSslCa: (env.DB_SSL_CA || '').replace(/\\n/g, '\n') || undefined,
     corsOrigins: list(env.CORS_ORIGIN),
     timeZone: 'Asia/Jakarta', // check_date is always the WIB calendar day
-    // NFR-03. Behind a proxy (Railway, Azure) set TRUST_PROXY=1 so the limit counts real client IPs, not the proxy.
+    // NFR-03. Behind a proxy (Railway) set TRUST_PROXY=1 so the limit counts real client IPs, not the proxy.
     trustProxy: Number(env.TRUST_PROXY) || false,
     rateLimit: { limit: Number(env.RATE_LIMIT_PER_MIN) || 60, windowMs: 60_000 },
     openrouter: {
