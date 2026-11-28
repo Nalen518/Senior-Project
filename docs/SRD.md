@@ -14,7 +14,7 @@ Define what MindMeter must do, the constraints it works under, and the acceptanc
 MindMeter is a web app for UGM students' private self-reflection. A student logs a one-tap daily mood check-in with an optional short note. The app reflects their own pattern back gently (rule-based trend, plus themes extracted from notes by an LLM) and keeps real human support one tap away.
 
 ### 1.3 Scope
-In scope (PoC): daily check-in, personal pattern dashboard, support and crisis path, offline check-in queue with sync, anonymous identity, Azure deployment, seeded demo account.
+In scope (PoC): daily check-in, personal pattern dashboard, support and crisis path, offline check-in queue with sync, anonymous identity, cloud deployment, seeded demo account.
 Out of scope: login/accounts, push/email reminders, campus-level aggregates, training any model, any diagnosis or clinical claim, native mobile apps, admin portal.
 
 ### 1.4 Definitions
@@ -33,12 +33,12 @@ Students (users) · the 3-person team · course lecturers (graders) · UGM wellb
 ## 2. Overall description
 
 ### 2.1 Context and technologies
-Client (Next.js + TypeScript, desktop-first) ↔ REST over HTTPS ↔ API (Node.js + Express, Azure App Service) ↔ Azure Database for PostgreSQL. The API calls OpenRouter (LLM) server-side. This covers the three required technologies:
+Client (Next.js + TypeScript, desktop-first, on Vercel) ↔ REST over HTTPS ↔ API (Node.js + Express, on Railway) ↔ PostgreSQL on Supabase. The API calls OpenRouter (LLM) server-side. This covers the three required technologies:
 
 | Technology | How MindMeter uses it |
 |------------|-----------------------|
 | Computer networks | REST/HTTPS client–server, CORS, rate limiting, offline queue + idempotent sync for unreliable campus wifi |
-| Cloud computing | Azure App Service + Azure PostgreSQL, app settings for secrets, health check, CI/CD deploy |
+| Cloud computing | Vercel, Railway and Supabase PostgreSQL, environment variables for secrets, health check, CI, deploy on merge |
 | Artificial intelligence | Rule-based trend detection (graded baseline) + LLM sentiment/theme extraction on notes, JSON-constrained output, graceful fallback |
 
 ### 2.2 User characteristics
@@ -48,10 +48,10 @@ UGM students, mostly on phones, often on slow or intermittent wifi, possibly str
 Latest two versions of desktop Chrome, Firefox and Edge, at 1280 px wide and up (designs use a 1440 px frame). **Desktop first:** mobile browsers and phone widths (360 px) are deferred to a later phase. Pages should not break on a phone, but phone layouts are not designed or acceptance-tested in this phase.
 
 ### 2.4 Constraints
-- One-semester timeline, 3 beginners. Deployed on the department's Azure account.
+- One-semester timeline, 3 beginners. Hosting is Vercel, Railway and Supabase because the department Azure account was not confirmed (DR-10).
 - Must never claim clinical function; must route to real human support.
 - No PII collected. Never train a model; use a pre-trained LLM via API.
-- Free/low-tier Azure and OpenRouter budget.
+- Free or low-tier hosting and OpenRouter budget.
 
 ### 2.5 Assumptions
 - **Desktop first (team decision, 21 Oct 2026):** design and acceptance target desktop browsers (1440 px design frame, 1280 px minimum). Mobile layouts are out of scope for this phase.
@@ -61,25 +61,23 @@ Latest two versions of desktop Chrome, Firefox and Edge, at 1280 px wide and up 
 
 ### 2.6 System architecture
 
-MindMeter is a three-tier web app: a Next.js + TypeScript frontend, a Node.js + Express REST API in JavaScript, and a PostgreSQL database, all on Azure. The API calls OpenRouter for the optional note analysis. Every connection is HTTPS and JSON. The full integration details are in `docs/MindMeter_Integration_Guide.pdf`.
+MindMeter is a three-tier web app: a Next.js + TypeScript frontend, a Node.js + Express REST API in JavaScript, and a PostgreSQL database. The API calls OpenRouter for the optional note analysis. Every connection is encrypted and API traffic is HTTPS and JSON. A diagram of the system as built, the ERD and the AI pipeline are in [ARCHITECTURE.md](./ARCHITECTURE.md). The integration details are in `docs/MindMeter_Integration_Guide.pdf`.
 
 ```mermaid
 flowchart LR
   subgraph Browser["Student's browser (desktop)"]
     UI["Next.js pages (TypeScript)<br/>landing, check-in, dashboard, support"]
-    LIB["src/lib<br/>api.ts (only file that calls the API)<br/>anonToken.ts, syncQueue.ts"]
+    LIB["frontend/lib<br/>api.ts (only file that calls the API)<br/>anonToken.ts, syncQueue.ts"]
     LS[("localStorage<br/>mindmeter_anon_token<br/>mindmeter_sync_queue")]
     UI --> LIB
     LIB <--> LS
   end
-  subgraph Azure["Microsoft Azure (department account)"]
-    SWA["Azure Static Web Apps<br/>static export of the frontend"]
-    API["Azure App Service<br/>Node.js 22 + Express 5"]
-    DB[("Azure Database for PostgreSQL<br/>8 tables, SSL")]
-  end
+  VERCEL["Vercel<br/>hosts the frontend"]
+  API["Railway<br/>Node.js 22 + Express 5"]
+  DB[("Supabase PostgreSQL<br/>8 tables, SSL, RLS")]
   LLM["OpenRouter<br/>LLM, JSON only"]
   C["shared/contract.ts<br/>types for all 5 endpoints"]
-  SWA -. serves pages .-> UI
+  VERCEL -. serves pages .-> UI
   LIB -- "HTTPS + JSON, X-Anon-Token" --> API
   API --> DB
   API -- "async, non-crisis notes only" --> LLM
@@ -93,16 +91,16 @@ flowchart LR
 
 | Layer | Technology | Location in repo | Responsibility |
 |-------|------------|------------------|----------------|
-| Pages and components | Next.js App Router, client-rendered pages, TypeScript | `frontend/src/app/` (planned) | Screens from the Figma hi-fi designs with loading, empty, error, offline and crisis states |
-| API client | TypeScript, `import type` from `shared/contract.ts` | `frontend/src/lib/api.ts` (reference: `docs/integration/reference-lib/`) | The only file that calls the backend. Sends `X-Anon-Token` (not for `/api/resources`), throws `ApiError` or `NetworkError` |
-| Anonymous identity | TypeScript | `frontend/src/lib/anonToken.ts` | Random UUID kept in `mindmeter_anon_token`. Never sent anywhere except the header |
-| Offline queue | TypeScript | `frontend/src/lib/syncQueue.ts` | `submitOrQueue()` on the check-in screen, `startAutoSync()` once in the root layout. Queue in `mindmeter_sync_queue` |
-| Contract | Types only, no runtime code | `shared/contract.ts` | Single source of truth for requests, responses, errors and storage keys. Frozen at v1.0 |
+| Pages and components | Next.js App Router, client-rendered pages, TypeScript | `frontend/app/`, `frontend/modules/` | Screens from the Figma hi-fi designs with loading, empty, error, offline and crisis states |
+| API client | TypeScript, `import type` from `shared/contract.ts` | `frontend/lib/api.ts` (reference: `docs/integration/reference-lib/`) | The only file that calls the backend. Sends `X-Anon-Token` (not for `/api/resources`), throws `ApiError` or `NetworkError` |
+| Anonymous identity | TypeScript | `frontend/lib/anonToken.ts` | Random UUID kept in `mindmeter_anon_token`. Never sent anywhere except the header |
+| Offline queue | TypeScript | `frontend/lib/syncQueue.ts` | `submitOrQueue()` on the check-in screen, `startAutoSync()` once in the root layout. Queue in `mindmeter_sync_queue` |
+| Contract | Types only, no runtime code | `shared/contract.ts` | Single source of truth for requests, responses, errors and storage keys. Frozen, now v1.2 (changelog in API-CONTRACT) |
 | HTTP layer | Express 5, helmet, cors, JSON body limit 32 kb | `backend/src/app.js`, `backend/src/api/`, `backend/src/middleware/` | Routing, request validation, anonymous user lookup (token is hashed), error shape `{ error: { code, message } }` |
 | Services | JavaScript | `backend/src/services/` | `checkinService` (crisis check, then save, then trend, then NLP later), `crisisService`, `insightService`, `nlpService` |
 | Rules | JavaScript | `backend/src/logic/` | `crisisCheck`, `trendRules` (rule-based AI), `checkDate` (Jakarta calendar day) |
 | Data access | `pg` with parameterized queries | `backend/src/models/`, `backend/src/db/pool.js` | The only place with SQL. One check-in per user per day |
-| Database | Azure Database for PostgreSQL | `backend/src/models/schema.sql` | 8 tables, ERD in `docs/image/ERD.png` |
+| Database | Supabase PostgreSQL | `backend/src/models/schema.sql` | 8 tables with row level security, ERD in `docs/ARCHITECTURE.md` |
 | LLM | OpenRouter, model from `OPENROUTER_MODEL` | called from `nlpService` | Sentiment and themes from a fixed list. Never on the crisis path, never in the request path |
 
 #### 2.6.2 Main flows
@@ -114,18 +112,18 @@ flowchart LR
 
 #### 2.6.3 Deployment and configuration
 
-| Side | Setting | Local | Azure |
+| Side | Setting | Local | Hosted |
 |------|---------|-------|-------|
-| Frontend | `NEXT_PUBLIC_API_URL` (baked in at build time) | `http://localhost:3000` | `https://<api>.azurewebsites.net` |
+| Frontend | `NEXT_PUBLIC_API_URL` (baked in at build time) | `http://localhost:3000` | the Railway API URL, set in Vercel |
 | Frontend | Dev port | `3001` (`next dev -p 3001`, avoids a clash with the API on 3000) | not used |
-| Frontend | `next.config` | `output: 'export'`, `images: { unoptimized: true }` | same, deployed to Azure Static Web Apps (PROJECT-PLAN MM-310) |
-| Backend | `PORT` | `3000` | set by Azure App Service, health check `GET /health` |
-| Backend | `CORS_ORIGIN` | `http://localhost:3001` | the Static Web Apps URL (required in production) |
-| Backend | `DATABASE_URL`, `DB_SSL` | local PostgreSQL, `false` | Azure PostgreSQL, `true` |
+| Frontend | Hosting | `npm run dev` | Vercel, root directory `frontend` |
+| Backend | `PORT`, `TRUST_PROXY` | `3000`, empty | set by Railway, `TRUST_PROXY=1`, health check `GET /health` |
+| Backend | `CORS_ORIGIN` | `http://localhost:3001` | the Vercel URL (required in production) |
+| Backend | `DATABASE_URL`, `DB_SSL`, `DB_SSL_CA` | local PostgreSQL, `false`, empty | Supabase pooler string, `true`, Supabase CA certificate |
 | Backend | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | empty (NLP off) | set in Stage 2, never in the frontend |
 | Backend | `DEMO_ANON_TOKEN` | any 16+ character token | same value, pasted into `localStorage` for the demo |
 
-Secrets live only in App Service settings and GitHub secrets, never in Git (template: `backend/.env.example`). CI on every pull request: backend ESLint and tests on a real PostgreSQL, including the contract check, and frontend ESLint, `tsc --noEmit` and `next build`. Jobs run when `backend/**`, `frontend/**` or `shared/**` change.
+Secrets live only in Railway variables, Vercel settings and GitHub secrets, never in Git (template: `backend/.env.example`). CI on every pull request: backend ESLint, dependency audit and tests on a real PostgreSQL including the contract check, and frontend ESLint and `next build`. Jobs run when `backend/**`, `frontend/**`, `shared/**` or the workflow change.
 
 ## 3. Functional requirements
 
@@ -136,7 +134,7 @@ Priority: **M** Must · **S** Should · **C** Could. Each has acceptance criteri
 | FR-01 | M | **One-tap check-in.** User selects a mood 1–5 from the home screen and it is saved. | AC: 1 tap saves; confirmation shown in < 1 s perceived; works with no note. |
 | FR-02 | M | **Optional note** up to 200 characters. | AC: counter shown; 201st char blocked in UI and rejected `400` by API; empty note allowed. |
 | FR-03 | M | **One check-in per day.** A second check-in on the same Jakarta date updates the first. | AC: two POSTs same day → one row; API returns 200 both times with the same `id`. |
-| FR-04 | M | **Anonymous identity** via browser token; no name/email/demographics. | AC: no PII fields in DB/API; token stored hashed (SHA-256); app works with no sign-in. |
+| FR-04 | M | **Anonymous identity** via browser token; no name/email/demographics. | AC: no PII fields in DB/API; token stored hashed (SHA-256); app works with no sign-in. An optional faculty choice stays in the browser and is never sent to the API. |
 | FR-05 | M | **Crisis detection before AI.** Backend keyword check on every note, before any LLM call. | AC: crisis phrase → `crisis_flag: true`, LLM not called, covered by unit tests for English and Indonesian variants (users may write in either). |
 | FR-06 | M | **Crisis screen.** When `crisis_flag` is true the FE shows a full-screen support view immediately. | AC: shows verified contacts first; one tap to call/open; cannot be dismissed accidentally by the check-in confirmation. |
 | FR-07 | M | **Always-visible support entry** on every screen. | AC: visible without scrolling at desktop width (1280 px and up) on all routes, including offline. The 360 px check moves to the mobile phase. |
@@ -146,6 +144,7 @@ Priority: **M** Must · **S** Should · **C** Could. Each has acceptance criteri
 | FR-11 | M | **Offline queue and sync.** Check-ins made offline are stored locally and synced idempotently when back online. | AC: airplane-mode test: 3 taps queued → reconnect → 3 rows, no duplicates, replay twice safe. |
 | FR-12 | S | **LLM note analysis** (sentiment + themes from a fixed theme list) via OpenRouter, asynchronous, JSON only. | AC: output validated against schema; invalid/timeout → status `failed`, no user-visible error; check-in always saved. |
 | FR-13 | S | **Themes on dashboard** (top ≤ 3 over 14 days). | AC: shown only when analyses are `done`; hidden gracefully otherwise. |
+| FR-17 | S | **Help card with booking pointer.** Dashboard shows a short pre-written help message chosen by fixed rules from the trend and LLM labels, plus counselling services to book, the student's own faculty first. | AC: no LLM-written text shown; booking pointer always present when verified contacts exist; direct wording when support is needed or ≥ 3 negative notes in 14 days; reach-out message after a crisis check-in; faculty never sent to the API. |
 | FR-14 | M | **Demo seed account** with ~4 weeks of varied data (incl. an improving and a declining stretch). | AC: demo token shows a populated dashboard instantly; seed contains invented notes only. |
 | FR-15 | M | **Disclaimer & framing.** App states it is reflection and signposting, not medical advice. | AC: visible on first use and in the footer/about; no diagnostic language anywhere. |
 | FR-16 | C | Data deletion by user (`DELETE /api/me`). | Decision pending; see API-CONTRACT §9; not in the frozen contract, would need a `contract-change` PR. |
@@ -158,20 +157,20 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 |----|----------|-------------|
 | NFR-01 | Performance | `POST /api/checkins` p95 < 500 ms (LLM runs asynchronously, never in the request path). Dashboard first load < 2 s on 4G; JS bundle for the home route < 200 KB gzipped (target). |
 | NFR-02 | Availability | Demo-week uptime target 99% (best effort on tier used); `/health` monitored. App remains usable offline for check-in and support. |
-| NFR-03 | Security | HTTPS only; input validated server-side; rate limit 60/min/IP; CORS allowlist; secure HTTP headers (e.g. Helmet); parameterized queries; secrets only in App Service settings/GitHub secrets; dependency audit in CI. |
+| NFR-03 | Security | HTTPS only; input validated server-side; rate limit 60/min/IP; CORS allowlist; secure HTTP headers (e.g. Helmet); parameterized queries; secrets only in host environment settings and GitHub secrets; dependency audit in CI. |
 | NFR-04 | Privacy | No PII; token hashed; notes ≤ 200 chars; **no note text, tokens or hashes in logs**; notes sent to the LLM only when not crisis-flagged, with no identifiers attached; no real student notes in tests/seeds. |
-| NFR-05 | Safety | Crisis logic deterministic and tested first; support always visible; LLM output never shown as advice, only used for theme labels. |
+| NFR-05 | Safety | Crisis logic deterministic and tested first; support always visible; LLM output never shown to students: it only produces validated labels (sentiment, themes). Help text is pre-written and chosen by fixed rules (FR-17); the LLM can make the booking wording stronger but never remove it or override the crisis path. |
 | NFR-06 | Usability / accessibility | One-tap core action; tap targets ≥ 44 px; WCAG AA contrast; usable with screen reader labels on mood buttons; calm, uncluttered, non-clinical tone. |
 | NFR-07 | Reliability | Idempotent sync; DB constraints enforce one check-in per user per day; LLM failure never blocks saving. |
 | NFR-08 | Maintainability | Shared TS contract; CI (lint, types, tests, build); docs updated with code; thresholds/config in one file. |
 | NFR-09 | Observability | Structured logs with `request_id`, route, status, latency; error tracking via logs only (no PII). |
-| NFR-10 | Portability | Environment-driven config (`.env.example`); same container/Node runtime locally and on Azure. |
+| NFR-10 | Portability | Environment-driven config (`.env.example`); same Node runtime locally and when hosted. |
 
 ## 5. External interfaces
 
 - **REST API:** see [API-CONTRACT.md](./API-CONTRACT.md) (E1–E5).
 - **OpenRouter:** server-to-server HTTPS. Model name in env var `OPENROUTER_MODEL` (exact string and English plus Indonesian note quality to be verified in W5, MM-501). Prompt asks for JSON only with themes from the fixed list; the server validates and discards anything else. The note of a crisis-flagged check-in is never sent.
-- **Database:** Azure PostgreSQL, 8 tables per `backend/src/models/schema.sql` (`users`, `checkins`, `note_analyses`, `themes`, `analysis_themes`, `resources`, `resource_themes`, `crisis_keywords`), ERD at `docs/image/ERD.png`.
+- **Database:** Supabase PostgreSQL, 8 tables per `backend/src/models/schema.sql` (`users`, `checkins`, `note_analyses`, `themes`, `analysis_themes`, `resources`, `resource_themes`, `crisis_keywords`), ERD in `docs/ARCHITECTURE.md`.
 
 ## 6. Data requirements
 
@@ -181,7 +180,7 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 | User | SHA-256 token hash, `is_demo`, reminder columns (unused) |
 | Note analysis | Separate table with status `pending/done/failed`; themes via join table |
 | Resources / keywords | Loaded by script after manual verification; **not** auto-seeded |
-| Retention | PoC: keep for the project period; document a deletion plan; delete demo/test data after grading |
+| Retention | PoC: keep for the project period. Delete demo/test data after grading. Plan and steps: [DATA-RETENTION.md](./DATA-RETENTION.md) |
 
 ## 7. Safety, ethics and privacy requirements
 
@@ -198,8 +197,8 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 |----------------------|--------------------------|--------------|
 | Problem/solution (10%) | Student wellbeing problem, privacy-first low-friction solution, B2B-to-university narrative | §1, FR-01, FR-07, FR-15 |
 | Networking (20%) | REST/HTTPS contract, CORS, rate limit, offline queue + idempotent sync, latency evidence | FR-11, NFR-01, NFR-03, API-CONTRACT §1, §5.3 |
-| Cloud (20%) | Azure App Service + PostgreSQL, health check, secrets, CI/CD, seeded demo | NFR-02, NFR-03, NFR-10, FR-14 |
-| AI (20%) | Rule-based trends (baseline) + LLM themes with validation and fallback | FR-09, FR-12, FR-13 |
+| Cloud (20%) | Vercel, Railway and Supabase, health check, secrets, CI, seeded demo | NFR-02, NFR-03, NFR-10, FR-14 |
+| AI (20%) | Rule-based trends (baseline) + LLM themes with validation and fallback + guardrailed help card (LLM labels in, pre-written text out) | FR-09, FR-12, FR-13, FR-17 |
 | Smooth demo (5%) | Demo account, rehearsed script, offline demo, health pre-flight | FR-14, PROJECT-PLAN W8 |
 | Process (50%: Git docs 20%, quizzes 20%) | PR rules, weekly milestones, tags, issue history | PR-RULES, PROJECT-PLAN |
 
@@ -216,7 +215,7 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 | AT-07 | Support entry on every screen at desktop width (1280 px) | Always visible and working |
 | AT-08 | 101 rapid requests in a minute from one IP (only once rate limiting is added, PROJECT-PLAN MM-601; stretch goal) | `429` after the limit, app recovers |
 | AT-09 | Inspect logs after AT-01…AT-05 | No note text, token or hash present |
-| AT-10 | Fresh deploy on Azure then `/health` | HTTP 200 from `/health` |
+| AT-10 | Fresh deploy on Railway then `/health` | HTTP 200 from `/health` |
 
 ## 10. Risks
 
@@ -227,7 +226,7 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 | LLM quality poor on English or Indonesian notes, or model string wrong | Weak AI grade | Verify in Week 2 (O3) with 20 invented notes; rule-based layer is the graded baseline; model name is configurable |
 | Wrong/unverified support contacts | Real harm | `safety` label PRs, 2 approvals, verify against official pages, record verification date |
 | Campus wifi flaky during demo | Failed demo | Offline queue is a feature; demo account; local recorded fallback video |
-| Azure free-tier cold starts / quotas | Slow first request | Always-on if available, warm-up before demo, health check |
+| Free-tier pauses, cold starts or quotas (Supabase pauses after about a week without use) | Slow or failed first request | Wake the services before the demo, health check |
 | Token loss (cleared browser) | User loses history | Documented limitation; optional export/restore is future work |
 | Scope creep (login, reminders, aggregates) | Missed core | "Won't" list enforced in planning |
 
@@ -256,6 +255,9 @@ Pros: compile-time contract matching, good mobile performance, one language acro
 
 **DR-08 Git flow: trunk-based rules (PR-RULES §1–§14) plus NIU personal branches and a `dev` branch (§15)**
 Pros: keeps the team's existing habit of working on a personal NIU branch; `dev` is the single integration branch and `main` is a clean final snapshot reached by one merge at the end; weekly progress is tagged on `dev`; squash keeps one commit per issue. Cons: long-lived personal branches can produce phantom conflicts or bloated PRs; `main` is deliberately unprotected (team decision), so only team discipline keeps it untouched until the final merge; GitHub only auto-closes issues on the default branch. Mitigations (sync-before-work, freeze rule, sync-after-merge, `dev` as default branch, merge-commit final merge) are in PR-RULES §15.4–§15.5. Fallback if it hurts by Week 4: task branches straight into `dev`.
+
+**DR-10 Hosting: Vercel, Railway and Supabase instead of Azure**
+Decision (23 Nov 2026): the frontend is hosted on Vercel, the Express API on Railway and PostgreSQL on Supabase, because the department Azure account was not confirmed. Pros: free tiers, deploy from GitHub, no code rewrite since all settings are environment variables. Cons: three dashboards instead of one, free tiers can pause, and the original plan to use the department account is not met. Mitigation: wake services before demos, keep the app portable so it can move to Azure if the account arrives.
 
 ## 12. Open items
 

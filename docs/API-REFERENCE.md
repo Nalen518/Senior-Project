@@ -97,14 +97,25 @@ Response (`InsightResponse`):
 {
   "trend": "declining",
   "message": "Your mood has been trending low for the past few days.",
+  "has_enough_data": true,
   "themes": ["workload", "sleep"],
   "resources": [
     { "id": "…uuid…", "title": "Campus Counselling Service", "description": "Free counselling for students.",
-      "url": "https://example.ac.id/konseling", "tags": ["workload"] }
-  ]
+      "url": "https://example.ac.id/konseling", "tags": ["workload"], "faculty": null, "support_group": "university" }
+  ],
+  "help": {
+    "message": "Your workload came up in your notes. Breaking tasks into small steps can make them feel lighter. It might help to talk this through with a counsellor. You can book a session below.",
+    "suggest_booking": true,
+    "booking_options": [
+      { "id": "…uuid…", "title": "Campus Counselling Service", "description": "Free counselling for students.",
+        "url": "https://example.ac.id/konseling", "tags": ["workload"], "faculty": null, "support_group": "university" },
+      { "id": "…uuid…", "title": "Faculty of Engineering Counselling", "description": "For engineering students.",
+        "url": "https://example.ac.id/ft", "tags": [], "faculty": "engineering", "support_group": "faculty" }
+    ]
+  }
 }
 ```
-`trend` is `stable`, `declining` or `improving`. Not enough data (under 3 check-ins in 7 days) returns `stable` with a "keep checking in" message. `themes` is `[]` until NLP is enabled. `resources` has at most 3 items and may be empty. Message text above is illustrative (English); show whatever the server returns.
+`trend` is `stable`, `declining` or `improving`. Not enough data (under 3 check-ins in 7 days) returns `stable` with a "keep checking in" message. `themes` is `[]` until NLP is enabled. `resources` has at most 3 items and may be empty. `help.booking_options`: show the student's own faculty first (picked and stored in the browser only), then `faculty: null` entries, and hide other faculties. Message text above is illustrative (English); show whatever the server returns.
 
 ---
 
@@ -118,7 +129,7 @@ Response (`ResourcesResponse`): primary crisis contact first.
 ```json
 [
   { "id": "…uuid…", "title": "Crisis Hotline", "description": "Immediate help, 24 hours.",
-    "url": "tel:+62000000000", "tags": [] }
+    "url": "tel:+62000000000", "tags": [], "faculty": null, "support_group": "crisis" }
 ]
 ```
 `url` starting with `tel:` should render as a call button.
@@ -140,4 +151,4 @@ Codes: `VALIDATION_ERROR` 400, `INVALID_JSON` 400, `ANON_TOKEN_REQUIRED` 401, `N
 
 ## Health check (not for the frontend)
 
-`GET /health` → 200, used by Azure App Service.
+`GET /health` → 200, used as the Railway health check.

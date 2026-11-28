@@ -1,34 +1,37 @@
-'use strict';
+"use strict";
 
 // Support contacts and self-help resources, returned in the contract's Resource shape:
-// { id, title, description, url, tags }.
+// { id, title, description, url, tags, faculty, support_group }.
+// Faculty services are returned for the Support page and grouped by
+// support_group: "faculty". The frontend displays them separately from
+// university-wide counselling, clinic, and crisis services.
 // The contract has one `url` field, so a phone number is returned as a tel: link.
 // Crisis contacts (and the primary crisis contact) prefer the phone: in a crisis the student
 // should get a number to call, not a website. Other resources prefer their website.
 
-const telLink = (phone) => `tel:${phone.replace(/[^\d+]/g, '')}`;
+const telLink = (phone) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
 const toResource = (row) => {
-  const phoneFirst = row.is_primary_crisis || row.type === 'crisis';
+  const phoneFirst = row.is_primary_crisis || row.type === "crisis";
   let url;
   if (phoneFirst) url = row.phone ? telLink(row.phone) : row.url;
   else url = row.url || telLink(row.phone);
-  return { id: row.id, title: row.title, description: row.description, url, tags: row.tags || [] };
+  return { id: row.id, title: row.title, description: row.description, url, tags: row.tags || [], faculty: row.faculty ?? null, support_group: row.support_group };
 };
 
 const SELECT = `
-  SELECT r.id, r.title, r.description, r.url, r.phone, r.type, r.is_primary_crisis, r.sort_order,
+  SELECT r.id, r.title, r.description, r.url, r.phone, r.type, r.is_primary_crisis, r.sort_order, r.faculty, r.support_group,
          COALESCE(array_agg(t.code ORDER BY t.code) FILTER (WHERE t.code IS NOT NULL), '{}') AS tags
     FROM resources r
     LEFT JOIN resource_themes rt ON rt.resource_id = r.id
     LEFT JOIN themes t ON t.id = rt.theme_id
    WHERE r.active`;
 
-const ORDER = 'ORDER BY r.is_primary_crisis DESC, r.sort_order, r.title';
+const ORDER = "ORDER BY r.is_primary_crisis DESC, r.sort_order, r.title";
 
 function createResources(db) {
   return {
-    /** Everything active; primary crisis contact first. */
+    /** Every active support resource; the primary crisis contact comes first. */
     async listActive() {
       const { rows } = await db.query(`${SELECT} GROUP BY r.id ${ORDER}`);
       return rows.map(toResource);
@@ -38,6 +41,7 @@ function createResources(db) {
     async match({ themeCodes, needsSupport, limit = 3 }) {
       const { rows } = await db.query(
         `${SELECT}
+           AND r.faculty IS NULL
            AND (
              r.id IN (SELECT rt2.resource_id FROM resource_themes rt2
                         JOIN themes t2 ON t2.id = rt2.theme_id WHERE t2.code = ANY($1::text[]))
@@ -46,6 +50,12 @@ function createResources(db) {
          GROUP BY r.id ${ORDER} LIMIT $3`,
         [themeCodes, needsSupport, limit],
       );
+      return rows.map(toResource);
+    },
+
+    /** Counselling services a student can book: UGM-wide ones and every faculty's own service. */
+    async bookingOptions() {
+      const { rows } = await db.query(`${SELECT} AND r.type = 'counselling' GROUP BY r.id ${ORDER}`);
       return rows.map(toResource);
     },
   };

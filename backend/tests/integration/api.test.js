@@ -56,12 +56,16 @@ describe('MindMeter API', { skip }, () => {
     await pool.query(fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql'), 'utf8'));
     await pool.query('INSERT INTO crisis_keywords (phrase) VALUES ($1)', [CRISIS_PHRASE]);
     await pool.query(`
-      INSERT INTO resources (title, description, phone, type, is_primary_crisis, sort_order)
-        VALUES ('Kontak krisis (uji)', 'Kontak uji', '+62 000-0000', 'crisis', true, 0);
-      INSERT INTO resources (title, description, url, type, sort_order)
-        VALUES ('Tips tidur (uji)', 'Sumber uji', 'https://example.org/tidur', 'self_help', 1);
+      INSERT INTO resources (title, description, phone, type, is_primary_crisis, sort_order, support_group)
+        VALUES ('Kontak krisis (uji)', 'Kontak uji', '+62 000-0000', 'crisis', true, 0, 'crisis');
+      INSERT INTO resources (title, description, url, type, sort_order, support_group)
+        VALUES ('Tips tidur (uji)', 'Sumber uji', 'https://example.org/tidur', 'self_help', 1, 'self_help');
       INSERT INTO resource_themes (resource_id, theme_id)
-        SELECT r.id, t.id FROM resources r, themes t WHERE r.title = 'Tips tidur (uji)' AND t.code = 'sleep';`);
+        SELECT r.id, t.id FROM resources r, themes t WHERE r.title = 'Tips tidur (uji)' AND t.code = 'sleep';
+      INSERT INTO resources (title, description, url, type, sort_order, support_group)
+        VALUES ('Konseling UGM (uji)', 'Sumber uji', 'https://example.org/ugm', 'counselling', 2, 'university');
+      INSERT INTO resources (title, description, url, type, sort_order, faculty, support_group)
+        VALUES ('Konseling FT (uji)', 'Sumber uji', 'https://example.org/ft', 'counselling', 3, 'engineering', 'faculty');`);
 
     const config = {
       timeZone: 'Asia/Jakarta',
@@ -149,10 +153,25 @@ describe('MindMeter API', { skip }, () => {
   test('GET /api/insights returns trend, message, themes from Stage 2, matched resources', async () => {
     const res = await call('GET', '/api/insights');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body).sort(), ['message', 'resources', 'themes', 'trend']);
+    assert.deepEqual(Object.keys(res.body).sort(), ['has_enough_data', 'help', 'message', 'resources', 'themes', 'trend']);
     assert.ok(['stable', 'declining', 'improving'].includes(res.body.trend));
     assert.deepEqual(res.body.themes, ['sleep', 'workload']);
     assert.equal(res.body.resources[0].title, 'Tips tidur (uji)');
+  });
+
+  test('GET /api/insights help card: pre-written message, UGM-wide and faculty booking options', async () => {
+    const { help } = (await call('GET', '/api/insights')).body;
+    assert.deepEqual(Object.keys(help).sort(), ['booking_options', 'message', 'suggest_booking']);
+    assert.match(help.message, /^Sleep came up in your notes\./);
+    assert.deepEqual(help.booking_options.map((r) => [r.title, r.faculty]),
+      [['Konseling UGM (uji)', null], ['Konseling FT (uji)', 'engineering']]);
+  });
+
+  test('GET /api/insights after a crisis check-in: reach-out message, crisis contact first', async () => {
+    const res = await call('GET', '/api/insights', { token: OTHER_TOKEN });
+    assert.match(res.body.help.message, /^Please reach out/);
+    assert.equal(res.body.help.suggest_booking, true);
+    assert.equal(res.body.resources[0].title, 'Kontak krisis (uji)');
   });
 
   test('GET /api/resources works WITHOUT a token: support is always reachable', async () => {
@@ -164,9 +183,87 @@ describe('MindMeter API', { skip }, () => {
   test('GET /api/resources: primary crisis contact first, phone as tel: link', async () => {
     const res = await call('GET', '/api/resources');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'id', 'tags', 'title', 'url']);
+    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'faculty', 'id', 'support_group', 'tags', 'title', 'url']);
     assert.equal(res.body[0].url, 'tel:+620000000');
     assert.deepEqual(res.body[1].tags, ['sleep']);
+  });
+
+  test('GET /api/resources includes active faculty counselling services', async () => {
+    const res = await call('GET', '/api/resources');
+    assert.equal(res.body.some((r) => r.title === 'Konseling FT (uji)' && r.faculty === 'engineering'), true);
+  });
+
+  test('rate limit: 429 RATE_LIMITED after the limit, but /api/resources always answers', async () => {
+    const limited = createApp({
+      db: pool,
+      config: { timeZone: 'Asia/Jakarta', corsOrigins: [], rateLimit: { limit: 3, windowMs: 60_000 }, openrouter: { enabled: false } },
+      logger: { warn() {}, error() {} },
+    }).listen(0);
+    try {
+      const get = (route) => fetch(`http://127.0.0.1:${limited.address().port}${route}`, { headers: { 'X-Anon-Token': TOKEN } });
+      for (let i = 0; i < 3; i += 1) assert.equal((await get('/api/insights')).status, 200);
+      const blocked = await get('/api/insights');
+      assert.equal(blocked.status, 429);
+      assert.equal((await blocked.json()).error.code, 'RATE_LIMITED');
+      assert.ok(Number(blocked.headers.get('retry-after')) > 0);
+      assert.equal((await get('/api/resources')).status, 200);
+    } finally {
+      limited.close();
+    }
+  });
+
+  test('failure drill (MM-507): with no OpenRouter key, check-in and insights still work and nothing is analysed', async () => {
+    const off = createApp({
+      db: pool,
+      config: { timeZone: 'Asia/Jakarta', corsOrigins: [], openrouter: { enabled: false } },
+      logger: { warn() {}, error() {} },
+    }).listen(0);
+    try {
+      const base2 = `http://127.0.0.1:${off.address().port}`;
+      const headers = { 'Content-Type': 'application/json', 'X-Anon-Token': 'integration_test_token_0004' };
+      const saved = await fetch(`${base2}/api/checkins`, { method: 'POST', headers, body: JSON.stringify({ mood_value: 3, note_text: 'catatan uji tanpa AI' }) });
+      assert.equal(saved.status, 200);
+      const body = await saved.json();
+      assert.equal(body.saved, true);
+      await new Promise((r) => setTimeout(r, 100));
+      const { rows } = await pool.query('SELECT count(*)::int AS n FROM note_analyses WHERE checkin_id = $1', [body.id]);
+      assert.equal(rows[0].n, 0);
+
+      const insight = await (await fetch(`${base2}/api/insights`, { headers })).json();
+      assert.deepEqual(insight.themes, []);
+      assert.ok(insight.help.message.length > 0);
+    } finally {
+      off.close();
+    }
+  });
+
+  test('every table has row level security on, so the Supabase public API reads nothing', async () => {
+    const { rows } = await pool.query(
+      "SELECT relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity");
+    assert.deepEqual(rows, []);
+  });
+
+  test('upgrade.sql fixes a database made before support_group, keeps RLS, and can run twice', async () => {
+    await pool.query('ALTER TABLE resources DROP COLUMN support_group; DROP TYPE support_group;');
+    const get = (route) => fetch(`${base}${route}`, { headers: { 'X-Anon-Token': TOKEN } });
+    assert.equal((await get('/api/resources')).status, 500); // the bug this fixes
+
+    const upgrade = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'models', 'upgrade.sql'), 'utf8');
+    await pool.query(upgrade);
+    // a database that still has the old silent default loses it on the next run
+    await pool.query("ALTER TABLE resources ALTER COLUMN support_group SET DEFAULT 'self_help'");
+    await pool.query(upgrade);
+    await assert.rejects(
+      pool.query("INSERT INTO resources (title, description, url, type) VALUES ('no group', 'x', 'https://example.org', 'self_help')"),
+      { code: '23502' },
+    );
+
+    const { rows } = await pool.query('SELECT type::text, faculty IS NOT NULL AS own, support_group::text AS grp FROM resources ORDER BY sort_order');
+    assert.deepEqual(rows.map((r) => r.grp), ['crisis', 'self_help', 'university', 'faculty']);
+    const { rows: rls } = await pool.query("SELECT relrowsecurity FROM pg_class WHERE oid = 'public.resources'::regclass");
+    assert.equal(rls[0].relrowsecurity, true);
+    assert.equal((await get('/api/resources')).status, 200);
+    assert.equal((await get('/api/insights')).status, 200);
   });
 
   // Rule 4 of the development plan: the backend (JavaScript) must match shared/contract.ts exactly.

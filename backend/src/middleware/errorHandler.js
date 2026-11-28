@@ -21,7 +21,8 @@ function errorHandler(logger = console) {
     if (err.type === 'entity.too.large') {
       return res.status(413).json({ error: { code: 'BODY_TOO_LARGE', message: 'Request body is too large.' } });
     }
-    logger.error(`[error] ${req.method} ${req.path}:`, err);
+    // NFR-04: never log the whole error. PostgreSQL puts row values, which can include the note, in `detail`.
+    logger.error(`[error] ${req.method} ${req.path}: ${err.code ?? ''} ${err.stack ?? err.message}`);
     return res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Something went wrong. Please try again.' } });
   };
 }

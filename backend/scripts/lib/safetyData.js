@@ -8,6 +8,14 @@ const { normalize } = require('../../src/logic/crisisCheck');
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TYPES = ['crisis', 'counselling', 'self_help'];
+const SUPPORT_GROUPS = ['crisis', 'university', 'faculty', 'clinic', 'self_help'];
+// UGM faculties and schools. Must match FacultyCode in shared/contract.ts (a unit test checks this).
+const FACULTY_CODES = [
+  'agricultural_technology', 'agriculture', 'animal_science', 'biology', 'cultural_sciences', 'dentistry',
+  'economics_business', 'engineering', 'forestry', 'geography', 'graduate_school', 'law',
+  'mathematics_natural_sciences', 'medicine_public_health_nursing', 'pharmacy', 'philosophy', 'psychology',
+  'social_political_sciences', 'veterinary_medicine', 'vocational_college',
+];
 
 const isDate = (v) => typeof v === 'string' && DATE.test(v) && !Number.isNaN(new Date(`${v}T00:00:00Z`).getTime());
 const blank = (v) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
@@ -48,7 +56,10 @@ function validateResources(data, themeCodes) {
     if (blank(r.url) && blank(r.phone)) errors.push(`${where}: needs a url or a phone`);
     if (!blank(r.url) && !/^https?:\/\//.test(r.url)) errors.push(`${where}: url must start with http:// or https://`);
     if (!TYPES.includes(r.type)) errors.push(`${where}: type must be one of ${TYPES.join(', ')}`);
+    if (!SUPPORT_GROUPS.includes(r.support_group)) errors.push(`${where}: support_group must be one of ${SUPPORT_GROUPS.join(', ')}`);
     if (!isDate(r.verified_at)) errors.push(`${where}: verified_at is missing: open the official page, confirm the contact, then set the date (YYYY-MM-DD)`);
+    if (!blank(r.faculty) && !FACULTY_CODES.includes(r.faculty)) errors.push(`${where}: unknown faculty ${r.faculty}`);
+    if (!blank(r.faculty) && r.type !== 'counselling') errors.push(`${where}: only counselling services can have a faculty`);
     const tags = Array.isArray(r.tags) ? r.tags : [];
     const unknown = tags.filter((t) => !themeCodes.includes(t));
     if (unknown.length > 0) errors.push(`${where}: unknown tags ${unknown.join(', ')}`);
@@ -62,6 +73,8 @@ function validateResources(data, themeCodes) {
       tags: [...new Set(tags)],
       verified_at: r.verified_at,
       sort_order: i,
+      faculty: blank(r.faculty) ? null : r.faculty,
+      support_group: r.support_group,
     };
   });
 
@@ -70,4 +83,4 @@ function validateResources(data, themeCodes) {
   return { resources: resources.filter(Boolean), errors };
 }
 
-module.exports = { validateKeywords, validateResources };
+module.exports = { validateKeywords, validateResources, FACULTY_CODES };

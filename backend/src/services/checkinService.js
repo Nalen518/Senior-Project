@@ -36,7 +36,9 @@ function createCheckinService({ models, crisis, nlp, insights, config, clock = (
   return {
     /** POST /api/checkins -> { id, saved, insight?, crisis_flag } */
     async submit(userId, entry) {
-      const { id, crisisFlag } = await saveOne(userId, entry, 'online');
+      const { id, applied, crisisFlag } = await saveOne(userId, entry, 'online');
+      // A newer check-in for this WIB day already exists, so this one was not written.
+      if (!applied) return { id, saved: false, crisis_flag: crisisFlag };
       if (crisisFlag) return { id, saved: true, crisis_flag: true };
       const { message } = await insights.trend(userId);
       return { id, saved: true, insight: message, crisis_flag: false };
