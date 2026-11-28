@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { Saved } from "./Saved";
 import { submitOrQueue } from "@/lib/syncQueue";
 
@@ -26,6 +28,34 @@ export const Hero = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [savedTitle, setSavedTitle] = useState("Check-in saved");
   const maxChars = 200;
+  const scope = useRef<HTMLElement>(null);
+
+  // Entrance and slow background drift. Skipped when the user prefers reduced motion.
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap
+          .timeline({ defaults: { ease: "power3.out", duration: 0.7 } })
+          .from("[data-anim=circle]", { scale: 0.6, autoAlpha: 0, stagger: 0.1, duration: 1.2 })
+          .from("[data-anim=title]", { y: 24, autoAlpha: 0 }, 0.2)
+          // clearProps hands transform back to Tailwind (hover and selected scale).
+          .from("[data-anim=mood]", { y: 16, scale: 0.8, autoAlpha: 0, stagger: 0.08, ease: "back.out(1.7)", clearProps: "transform" }, 0.4)
+          .from("[data-anim=rise]", { y: 16, autoAlpha: 0, stagger: 0.1 }, 0.7);
+
+        gsap.to("[data-anim=circle]", {
+          y: "random(-18, 18)",
+          x: "random(-12, 12)",
+          duration: "random(5, 8)",
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+          delay: 1.2,
+        });
+      });
+    },
+    { scope },
+  );
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= maxChars) {
@@ -76,17 +106,17 @@ export const Hero = () => {
 
   return (
     <>
-      <section className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-[#1B363A] select-none">
+      <section ref={scope} className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-[#1B363A] select-none">
         {/* Background Decorative Circles */}
-        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-[#E3F2F1]/60 z-0 pointer-events-none" />
-        <div className="absolute right-12 top-20 h-32 w-32 rounded-full bg-[#ECE1BE] z-0 pointer-events-none" />
-        <div className="absolute left-10 bottom-24 h-40 w-40 rounded-full bg-[#E4A79A]/70 z-0 pointer-events-none" />
-        <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-[#D8C7E7] z-0 pointer-events-none" />
+        <div data-anim="circle" className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-[#E3F2F1]/60 z-0 pointer-events-none" />
+        <div data-anim="circle" className="absolute right-12 top-20 h-32 w-32 rounded-full bg-[#ECE1BE] z-0 pointer-events-none" />
+        <div data-anim="circle" className="absolute left-10 bottom-24 h-40 w-40 rounded-full bg-[#E4A79A]/70 z-0 pointer-events-none" />
+        <div data-anim="circle" className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-[#D8C7E7] z-0 pointer-events-none" />
 
         {/* Main Container */}
         <div className="relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
           {/* Title */}
-          <h1 className="mb-10 font-serif text-3xl font-bold text-[#1F3347] sm:text-4xl">
+          <h1 data-anim="title" className="mb-10 font-serif text-3xl font-bold text-[#1F3347] sm:text-4xl">
             How are you feeling today?
           </h1>
 
@@ -101,6 +131,7 @@ export const Hero = () => {
                 <button
                   key={idx}
                   type="button"
+                  data-anim="mood"
                   onClick={() => setSelectedMood(mood.value)}
                   className={`relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#1F3347] transition-transform hover:scale-105 sm:h-14 sm:w-14 ${
                     mood.color
@@ -188,6 +219,7 @@ export const Hero = () => {
 
           {/* Text Input Container */}
           <div
+            data-anim="rise"
             className={`relative w-full rounded-xl border focus-within:outline-2 focus-within:outline-[#1F3347] border-gray-300 bg-[#E8F3F3] p-4 text-left shadow-sm ${isSaved ? "" : ""}`}
           >
             <textarea
@@ -210,6 +242,7 @@ export const Hero = () => {
 
           <button
             type="button"
+            data-anim="rise"
             onClick={handleSave}
             disabled={isSaving}
             className="mt-6 w-full rounded-lg bg-[#A3D9D9] py-3 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-[#8ECFCE] disabled:cursor-not-allowed disabled:opacity-60"
@@ -230,6 +263,7 @@ export const Hero = () => {
           {/* Need to talk to someone Button */}
           <Link
             href="/support"
+            data-anim="rise"
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#D3C1E5] py-3 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-[#C5B0DA]"
           >
             <span>Need to talk to someone?</span>
