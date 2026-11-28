@@ -48,7 +48,7 @@ describe('validateKeywords', () => {
 });
 
 describe('validateResources', () => {
-  const ok = { title: 'Kontak', description: 'Desc', phone: '+62 1', url: null, type: 'crisis', tags: ['sleep'], verified_at: '2026-09-28' };
+  const ok = { title: 'Kontak', description: 'Desc', phone: '+62 1', url: null, type: 'crisis', tags: ['sleep'], verified_at: '2026-09-28', support_group: 'crisis' };
 
   test('accepts a verified contact', () => {
     const { resources, errors } = validateResources({ resources: [ok] }, THEMES);
@@ -82,10 +82,10 @@ describe('validateResources', () => {
 });
 
 describe('faculty codes', () => {
-  const ok = { title: 'T', description: 'D', url: 'https://x', type: 'counselling', verified_at: '2026-11-16', tags: [] };
+  const ok = { title: 'T', description: 'D', url: 'https://x', type: 'counselling', verified_at: '2026-11-16', tags: [], support_group: 'university' };
 
   test('a known faculty on a counselling service is kept', () => {
-    const { resources, errors } = validateResources({ resources: [{ ...ok, faculty: 'engineering' }] }, []);
+    const { resources, errors } = validateResources({ resources: [{ ...ok, faculty: 'engineering', support_group: 'faculty' }] }, []);
     assert.deepEqual(errors, []);
     assert.equal(resources[0].faculty, 'engineering');
   });

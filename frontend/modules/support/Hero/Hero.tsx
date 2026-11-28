@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import { api } from "@/lib/api";
 import { offlineSupportResources } from "@/constant/offlineSupport";
 
@@ -13,6 +14,64 @@ export const Hero = () => {
   const [resourceSource, setResourceSource] = useState<"api" | "offline">(
     "api",
   );
+  const crisisResources = resources.filter(
+    (resource) => resource.support_group === "crisis",
+  );
+
+  const scope = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (prefersReduced || !scope.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap
+        .timeline({ defaults: { ease: "power2.out", duration: 0.65 } })
+        .from(
+          "[data-anim=circle]",
+          {
+            opacity: 0,
+            y: 10,
+            stagger: 0.08,
+            duration: 0.9,
+          },
+          0,
+        )
+        .from(
+          "[data-anim=title]",
+          {
+            opacity: 0,
+            y: 14,
+            clearProps: "transform,opacity",
+          },
+          0.12,
+        )
+        .from(
+          "[data-anim=rise]",
+          {
+            opacity: 0,
+            y: 12,
+            stagger: 0.08,
+            clearProps: "transform,opacity",
+          },
+          0.24,
+        );
+
+      gsap.to("[data-anim=circle]", {
+        y: "+=10",
+        duration: 4.5,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        stagger: { each: 0.4, from: "random" },
+        delay: 1.25,
+      });
+    }, scope);
+
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     const loadResources = async () => {
@@ -28,6 +87,7 @@ export const Hero = () => {
             url: resource.url,
             tags: resource.tags,
             faculty: resource.faculty,
+            support_group: resource.support_group,
           })),
         );
         setResourceSource("offline");
@@ -41,15 +101,33 @@ export const Hero = () => {
 
   return (
     <>
-      <main className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-[#1F3347] sm:px-6">
-        <div className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full bg-[#E4A79A]" />
-        <div className="pointer-events-none absolute right-20 top-24 h-20 w-20 rounded-full bg-[#ECE1BE]" />
-        <div className="pointer-events-none absolute -right-12 top-40 h-36 w-36 rounded-full bg-[#D3C1E5]" />
-        <div className="pointer-events-none absolute -left-10 bottom-24 h-36 w-36 rounded-full bg-[#ECE1BE]" />
-        <div className="pointer-events-none absolute -right-10 bottom-14 h-40 w-40 rounded-full bg-[#E3F2F1]" />
+      <main
+        ref={scope}
+        className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-[#1F3347] sm:px-6"
+      >
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full bg-[#E4A79A] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute right-20 top-24 h-20 w-20 rounded-full bg-[#ECE1BE] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-12 top-40 h-36 w-36 rounded-full bg-[#D3C1E5] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-10 bottom-24 h-36 w-36 rounded-full bg-[#ECE1BE] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-10 bottom-14 h-40 w-40 rounded-full bg-[#E3F2F1] will-change-transform"
+        />
 
         <div className="relative mx-auto max-w-3xl">
-          <header className="mb-5">
+          <header data-anim="title" className="mb-5 will-change-transform">
             <h1 className="font-serif text-3xl font-bold sm:text-4xl">
               Support at UGM
             </h1>
@@ -59,7 +137,24 @@ export const Hero = () => {
             </p>
           </header>
 
-          <section className="rounded-xl bg-[#C9AFD8] p-4 shadow-sm sm:p-5">
+          {resourceSource === "offline" && (
+            <section
+              data-anim="rise"
+              className="mb-5 rounded-xl border border-[#CFE3E4] bg-[#EAF4F4] px-5 py-4 text-[#1F3347] shadow-xs will-change-transform sm:px-6"
+              role="status"
+            >
+              <h2 className="font-serif text-lg font-bold">You are offline.</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-[#3D4D59]">
+                This emergency contact is built into the app so it always works.
+                The full list of UGM services loads when you are back online.
+              </p>
+            </section>
+          )}
+
+          <section
+            data-anim="rise"
+            className="rounded-xl bg-[#C9AFD8] p-4 shadow-sm will-change-transform sm:p-5"
+          >
             <h2 className="font-serif text-lg font-bold">
               If you need help right now
             </h2>
@@ -68,13 +163,6 @@ export const Hero = () => {
               go to the nearest hospital.
             </p>
 
-            {resourceSource === "offline" && (
-              <p className="mt-3 rounded-lg bg-amber-100 px-4 py-3 text-sm text-amber-950">
-                You’re offline. Showing the locally saved support list; contact
-                details may have changed since they were verified.
-              </p>
-            )}
-            
             <div className="mt-3 space-y-2">
               {isLoading && (
                 <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
@@ -91,14 +179,14 @@ export const Hero = () => {
                 </p>
               )}
 
-              {!isLoading && !errorMessage && resources.length === 0 && (
+              {!isLoading && !errorMessage && crisisResources.length === 0 && (
                 <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
                   Support contacts will appear here once they have been
                   verified.
                 </p>
               )}
 
-              {resources.map((resource) => {
+              {crisisResources.map((resource) => {
                 const isPhoneLink = resource.url.startsWith("tel:");
                 const actionLabel = isPhoneLink ? "Call" : "Open";
 
@@ -130,44 +218,93 @@ export const Hero = () => {
             </div>
           </section>
 
-          <section className="mt-5">
-            <h2 className="font-serif text-lg font-bold">
-              Talk to a counsellor
-            </h2>
-            <p className="mt-1 text-sm text-[#3D4D59]">
-              Support contacts are listed above. More detailed groups will be
-              added when the API provides each service category.
-            </p>
+          {resourceSource !== "offline" && (
+            <section data-anim="rise" className="mt-5 will-change-transform">
+              <h2 className="font-serif text-lg font-bold">
+                Talk to a counsellor
+              </h2>
 
-            <details className="mt-3 border-b border-[#B8C0C3] py-3">
-              <summary className="cursor-pointer font-serif font-bold">
-                University services
-              </summary>
-              <p className="mt-2 text-sm text-[#3D4D59]">
-                University counselling services will appear here.
+              <p className="mt-1 text-sm text-[#3D4D59]">
+                Find a counselling service that feels right for you.
               </p>
-            </details>
 
-            <details className="border-b border-[#B8C0C3] py-3">
-              <summary className="cursor-pointer font-serif font-bold">
-                Faculty services
-              </summary>
-              <p className="mt-2 text-sm text-[#3D4D59]">
-                Faculty counselling services will appear here.
-              </p>
-            </details>
+              {[
+                {
+                  title: "University services",
+                  group: "university",
+                  empty:
+                    "No university-wide counselling services are available yet.",
+                },
+                {
+                  title: "Faculty services",
+                  group: "faculty",
+                  empty:
+                    "Choose your faculty on the dashboard to see relevant faculty counselling services.",
+                },
+                {
+                  title: "Clinics",
+                  group: "clinic",
+                  empty: "No clinic contacts are available yet.",
+                },
+              ].map(({ title, group, empty }) => {
+                const groupResources = resources.filter(
+                  (resource) => resource.support_group === group,
+                );
 
-            <details className="border-b border-[#B8C0C3] py-3">
-              <summary className="cursor-pointer font-serif font-bold">
-                Clinics
-              </summary>
-              <p className="mt-2 text-sm text-[#3D4D59]">
-                Clinic contacts will appear here.
-              </p>
-            </details>
-          </section>
+                return (
+                  <details
+                    key={group}
+                    className="mt-3 border-b border-[#B8C0C3] py-3"
+                  >
+                    <summary className="cursor-pointer font-serif font-bold">
+                      {title}
+                    </summary>
 
-          <p className="mt-8 text-xs text-[#5E6A70]">
+                    <div className="mt-3 space-y-3">
+                      {groupResources.length === 0 ? (
+                        <p className="text-sm text-[#3D4D59]">{empty}</p>
+                      ) : (
+                        groupResources.map((resource) => {
+                          const isPhoneLink = resource.url.startsWith("tel:");
+
+                          return (
+                            <article
+                              key={resource.id}
+                              className="flex flex-col gap-3 rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div>
+                                <h3 className="font-serif font-bold">
+                                  {resource.title}
+                                </h3>
+
+                                <p className="mt-1 text-sm text-[#3D4D59]">
+                                  {resource.description}
+                                </p>
+                              </div>
+
+                              <a
+                                href={resource.url}
+                                target={isPhoneLink ? undefined : "_blank"}
+                                rel={isPhoneLink ? undefined : "noreferrer"}
+                                className="shrink-0 rounded-lg bg-[#F6A15E] px-5 py-2 text-center text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                              >
+                                {isPhoneLink ? "Call" : "Open"}
+                              </a>
+                            </article>
+                          );
+                        })
+                      )}
+                    </div>
+                  </details>
+                );
+              })}
+            </section>
+          )}
+
+          <p
+            data-anim="rise"
+            className="mt-8 text-xs text-[#5E6A70] will-change-transform"
+          >
             MindMeter is not a medical or diagnostic tool.
           </p>
         </div>

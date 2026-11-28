@@ -65,7 +65,7 @@ async function main() {
     const today = toLocalDate(new Date());
     for (let i = 0; i < MOODS.length; i += 1) {
       const day = addDays(today, i - (MOODS.length - 1));
-      const tappedAt = `${day}T20:00:00+07:00`;
+      const tappedAt = i === MOODS.length - 1 ? new Date().toISOString() : `${day}T20:00:00+07:00`;
       const inserted = await client.query(
         `INSERT INTO checkins (user_id, mood_value, note_text, check_date, client_ts, created_at)
          VALUES ($1, $2, $3, $4, $5, $5) RETURNING id`,

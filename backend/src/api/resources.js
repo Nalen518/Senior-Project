@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-// GET /api/resources -> [{ id, title, description, url, tags }]  (primary crisis contact first)
+// GET /api/resources -> [{ id, title, description, url, tags, faculty, support_group }]  (primary crisis contact first)
 function resourcesRouter({ models }) {
   const router = express.Router();
   router.get('/', async (req, res) => {

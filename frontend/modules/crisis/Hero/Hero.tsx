@@ -1,89 +1,143 @@
-import Link from 'next/link';
+"use client";
 
-export const Hero= () => {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import { offlineSupportResources } from "@/constant/offlineSupport";
+
+type Resource = Awaited<ReturnType<typeof api.getResources>>[number];
+
+export const Hero = () => {
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isOfflineFallback, setIsOfflineFallback] = useState(false);
+
+  const crisisResources = resources.filter(
+    (resource) => resource.support_group === "crisis",
+  );
+
+  useEffect(() => {
+    const loadResources = async () => {
+      try {
+        setErrorMessage("");
+        setIsOfflineFallback(false);
+        const data = await api.getResources();
+        setResources(data);
+      } catch {
+        const fallbackCrisis = offlineSupportResources
+          .filter((resource) => resource.support_group === "crisis")
+          .map((resource) => ({
+            id: resource.id,
+            title: resource.title,
+            description: resource.description,
+            url: resource.url,
+            tags: resource.tags,
+            faculty: resource.faculty,
+            support_group: resource.support_group,
+          }));
+
+        if (fallbackCrisis.length > 0) {
+          setResources(fallbackCrisis);
+          setIsOfflineFallback(true);
+        } else {
+          setErrorMessage(
+            navigator.onLine
+              ? "We could not load support contacts right now. Please try again shortly."
+              : "You are offline and support contacts could not be loaded.",
+          );
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadResources();
+  }, []);
+
   return (
-    <div className="relative flex flex-col items-center min-h-screen overflow-hidden bg-white font-sans py-20">
-      {/* Background Decorative Shapes */}
-      <div className="absolute top-[5%] left-[-5%] w-48 h-48 sm:w-72 sm:h-72 bg-[#DF9D8D] rounded-full opacity-80" />
-      <div className="absolute top-[5%] right-[15%] w-32 h-32 bg-[#E9DDB8] rounded-full opacity-80" />
-      <div className="absolute top-[15%] right-[-5%] w-48 h-48 sm:w-64 sm:h-64 bg-[#D5C6E0] rounded-full opacity-80" />
-      <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 sm:w-80 sm:h-80 bg-[#E9DDB8] rounded-full opacity-80" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-80 h-80 sm:w-96 sm:h-96 bg-[#EAF5F5] rounded-full opacity-80" />
-
-      {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 w-full max-w-2xl mt-8">
-        
-        {/* Header Text */}
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-[#142B47] mb-4">
+    <main className="relative flex min-h-screen flex-col items-center overflow-hidden bg-white py-20">
+      <div className="relative z-10 mt-8 flex w-full max-w-2xl flex-col items-center px-4 text-center">
+        <h1 className="mb-4 font-serif text-4xl font-bold text-[#142B47] md:text-5xl">
           You are not alone.
         </h1>
-        <p className="text-[#4A5568] text-base md:text-lg mb-12 max-w-md mx-auto">
-          It sounds like things are really heavy right now. Talking to a real person can help. You can reach someone now.
+
+        <p className="mb-10 max-w-md text-base text-[#4A5568] md:text-lg">
+          It sounds like things are really heavy right now. Talking to a real
+          person can help. You can reach someone now.
         </p>
 
-        {/* Contact Cards */}
-        <div className="w-full flex flex-col gap-4 mb-12">
-          
-          {/* MHERL */}
-          <div className="flex items-center justify-between p-5 bg-[#EAF5F5] border border-[#D1E8E8] rounded-xl">
-            <div className="text-left pr-4">
-              <h2 className="text-lg md:text-xl font-serif font-bold text-[#142B47] mb-1">MHERL</h2>
-              <p className="text-xs md:text-sm text-[#4A5568]">UGM mental health emergency line, 24 hours on WhatsApp</p>
-            </div>
-            <a 
-              href="https://wa.me/6281329520052" target="_blank" rel="noopener noreferrer"
-              className="px-5 py-2 bg-[#F19F65] hover:bg-[#e08e54] text-[#142B47] font-semibold rounded-md transition-colors"
-            >
-              Chat
-            </a>
-          </div>
+        {isOfflineFallback && (
+          <p
+            role="status"
+            className="mb-4 w-full rounded-xl border border-[#D1E8E8] bg-[#EAF5F5] px-4 py-3 text-xs text-[#4A5568] md:text-sm"
+          >
+            You are offline. Showing saved emergency contact details.
+          </p>
+        )}
 
-          {/* PK4L */}
-          <div className="flex items-center justify-between p-5 bg-[#EAF5F5] border border-[#D1E8E8] rounded-xl">
-            <div className="text-left pr-4">
-              <h2 className="text-lg md:text-xl font-serif font-bold text-[#142B47] mb-1">PK4L</h2>
-              <p className="text-xs md:text-sm text-[#4A5568]">UGM campus emergency service, (0274) 649-1234</p>
-            </div>
-            <a 
-              href="tel:02746491234" 
-              className="px-5 py-2 bg-[#F19F65] hover:bg-[#e08e54] text-[#142B47] font-semibold rounded-md transition-colors"
+        <div className="mb-10 flex w-full flex-col gap-4">
+          {isLoading ? (
+            <p className="rounded-xl bg-[#EAF5F5] p-5 text-sm text-[#4A5568]">
+              Loading support contacts…
+            </p>
+          ) : errorMessage ? (
+            <p
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"
             >
-              Call
-            </a>
-          </div>
+              {errorMessage}
+            </p>
+          ) : crisisResources.length === 0 ? (
+            <p className="rounded-xl bg-[#EAF5F5] p-5 text-sm text-[#4A5568]">
+              No support contacts are available right now.
+            </p>
+          ) : (
+            crisisResources.map((resource) => {
+              const isPhone = resource.url.startsWith("tel:");
 
-          {/* Healing119 */}
-          <div className="flex items-center justify-between p-5 bg-[#EAF5F5] border border-[#D1E8E8] rounded-xl">
-            <div className="text-left pr-4">
-              <h2 className="text-lg md:text-xl font-serif font-bold text-[#142B47] mb-1">Healing119</h2>
-              <p className="text-xs md:text-sm text-[#4A5568]">National support line from the Ministry of Health</p>
-            </div>
-            <a 
-              href="https://www.healing119.id/" target="_blank" rel="noopener noreferrer"
-              className="px-5 py-2 bg-[#F19F65] hover:bg-[#e08e54] text-[#142B47] font-semibold rounded-md transition-colors"
-            >
-              Open
-            </a>
-          </div>
+              return (
+                <article
+                  key={resource.id}
+                  className="flex items-center justify-between rounded-xl border border-[#D1E8E8] bg-[#EAF5F5] p-5"
+                >
+                  <div className="pr-4 text-left">
+                    <h2 className="mb-1 font-serif text-lg font-bold text-[#142B47] md:text-xl">
+                      {resource.title}
+                    </h2>
 
+                    <p className="text-xs text-[#4A5568] md:text-sm">
+                      {resource.description}
+                    </p>
+                  </div>
+
+                  <a
+                    href={resource.url}
+                    target={isPhone ? undefined : "_blank"}
+                    rel={isPhone ? undefined : "noreferrer"}
+                    className="rounded-md bg-[#F19F65] px-5 py-2 font-semibold text-[#142B47] transition-colors hover:bg-[#E08E54]"
+                  >
+                    {isPhone ? "Call" : "Open"}
+                  </a>
+                </article>
+              );
+            })
+          )}
         </div>
 
-        {/* Disclaimer Text */}
-        <p className="text-[#142B47] text-sm md:text-base font-medium mb-4 max-w-lg mx-auto">
-          If you are in immediate danger, call local emergency services or go to the nearest hospital.
-        </p>
-        <p className="text-[#718096] text-xs md:text-sm mb-10">
-          Your check-in is saved. No AI insight is shown here.
+        <p className="mb-4 max-w-lg text-sm font-medium text-[#142B47] md:text-base">
+          If you are in immediate danger, call local emergency services or go to
+          the nearest hospital.
         </p>
 
-        {/* Back Button */}
-        <Link 
+
+        <Link
           href="/"
-          className="px-6 py-2.5 bg-white border border-[#CBD5E0] hover:bg-gray-50 text-[#142B47] font-semibold rounded-md shadow-sm transition-colors"
+          className="rounded-md border border-[#CBD5E0] bg-white px-6 py-2.5 font-semibold text-[#142B47] shadow-sm transition-colors hover:bg-gray-50"
         >
           Back to MindMeter
         </Link>
       </div>
-    </div>
+    </main>
   );
-}
+};
