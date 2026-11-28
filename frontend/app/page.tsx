@@ -1,12 +1,5 @@
-import { Hero } from "@/modules/checkin/index";
-import { Navbar } from "@/components/layout/Navbar";
+import { Hero } from "@/modules/landing/index";
 
-
-export default async function Home() {
-  return (
-    <>
-      <Navbar />
-      <Hero />
-    </>
-  );
+export default function Home() {
+  return <Hero />;
 }
