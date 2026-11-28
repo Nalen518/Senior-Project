@@ -180,7 +180,7 @@ Won't (this PoC): login, reminders (schema columns exist, no sending), campus ag
 | User | SHA-256 token hash, `is_demo`, reminder columns (unused) |
 | Note analysis | Separate table with status `pending/done/failed`; themes via join table |
 | Resources / keywords | Loaded by script after manual verification; **not** auto-seeded |
-| Retention | PoC: keep for the project period; document a deletion plan; delete demo/test data after grading |
+| Retention | PoC: keep for the project period. Delete demo/test data after grading. Plan and steps: [DATA-RETENTION.md](./DATA-RETENTION.md) |
 
 ## 7. Safety, ethics and privacy requirements
 

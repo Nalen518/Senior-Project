@@ -115,6 +115,8 @@ The note is sent alone, with no user id, to a pre-trained model through OpenRout
 
 It runs after the response is sent, with temperature 0 and a 15 second timeout, so a slow model never delays a check-in.
 
+Every request is restricted to providers that do not collect data and have zero data retention (`provider.data_collection: "deny"`, `provider.zdr: true`). What is stored and how to delete it: [DATA-RETENTION.md](./DATA-RETENTION.md).
+
 ### 3.4 Output guardrail
 - Only the sentiment, score and themes are read. Any other field, such as invented advice, is dropped
 - Themes outside the fixed list are removed
@@ -153,6 +155,8 @@ The API returns the help card. The dashboard does not show it yet.
 | All | 20 | 0 | 100% | 88% | 96% | 1411 | 3008 |
 | English | 10 | 0 | 100% | 85% | 92% | 1311 | 2527 |
 | Indonesian | 10 | 0 | 100% | 92% | 100% | 2588 | 3008 |
+
+Repeated the same day with zero data retention switched on: 0 failed, the same accuracy figures, median 1697 ms, max 5811 ms.
 
 Recall is the share of expected themes the model found. Precision is the share of its themes that were expected. The misses: "health" was not tagged for a note about a walk (English and Indonesian), "workload" was not tagged for a note about being alone in a group project, and "motivation" was added to a note about lack of sleep.
 
