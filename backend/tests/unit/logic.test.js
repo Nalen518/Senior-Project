@@ -45,6 +45,13 @@ describe('trendRules', () => {
   const today = '2026-09-28';
   const days = (moods) => moods.map((mood_value, i) => ({ mood_value, check_date: addDays(today, i - (moods.length - 1)) }));
 
+  test('has_enough_data needs 3 check-ins inside the last 7 days, older ones do not count', () => {
+    const day = (d) => ({ mood_value: 4, check_date: d });
+    const old = [day('2026-09-20'), day('2026-09-21')]; // 8 and 7 days before: outside the window
+    assert.equal(computeTrend([...old, day('2026-09-22'), day('2026-09-28')], '2026-09-28').hasEnoughData, false);
+    assert.equal(computeTrend([day('2026-09-22'), day('2026-09-25'), day('2026-09-28')], '2026-09-28').hasEnoughData, true);
+  });
+
   test('fewer than 3 check-ins: asks for more data', () => {
     const r = computeTrend(days([2, 2]), today);
     assert.equal(r.trend, 'stable');
