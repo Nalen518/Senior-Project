@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const express = require('express');
 const { rateLimit } = require('../../src/middleware/rateLimit');
 const { requestLog } = require('../../src/middleware/requestLog');
+const { errorHandler } = require('../../src/middleware/errorHandler');
 
 const mockRes = () => ({
   headers: {},
@@ -80,5 +81,20 @@ describe('requestLog (NFR-04, NFR-09)', () => {
     } finally {
       server.close();
     }
+  });
+});
+
+describe('errorHandler logging (NFR-04)', () => {
+  test('a database error is logged without its row values', () => {
+    const lines = [];
+    const err = Object.assign(new Error('new row violates check constraint'), {
+      code: '23514',
+      detail: 'Failing row contains (SECRET_NOTE_TEXT).',
+    });
+    const res = mockRes();
+    errorHandler({ error: (...args) => lines.push(args.join(' ')) })(err, { method: 'POST', path: '/checkins' }, res, () => {});
+    assert.equal(res.code, 500);
+    assert.match(lines.join(), /23514/);
+    assert.equal(lines.join().includes('SECRET_NOTE_TEXT'), false);
   });
 });
