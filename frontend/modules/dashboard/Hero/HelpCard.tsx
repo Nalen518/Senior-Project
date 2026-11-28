@@ -75,25 +75,25 @@ export function HelpCard({ help }: { help: InsightHelp }) {
     <section
       className={`mt-10 rounded-2xl border p-6 ${
         help.suggest_booking
-          ? "border-2 border-[#F19F65] bg-[#FFF4EC]"
-          : "border-[#D9D9D9] bg-white"
+          ? "border-2 border-accent bg-[#FFF4EC]"
+          : "border-line bg-white"
       }`}
     >
-      <h2 className="font-serif text-[22px] font-semibold leading-[30px] text-[#163250]">
+      <h2 className="title-section text-ink">
         Talk to someone
       </h2>
-      <p className="mt-2 max-w-3xl text-sm leading-5 text-[#333333]">
+      <p className="mt-2 max-w-3xl text-sm leading-5 text-body">
         {help.message}
       </p>
 
       {help.booking_options.length > 0 && (
         <>
-          <label className="mt-6 flex flex-col gap-2 text-sm font-medium text-[#163250] sm:flex-row sm:items-center sm:gap-3">
+          <label className="mt-6 flex flex-col gap-2 text-sm font-medium text-ink sm:flex-row sm:items-center sm:gap-3">
             Your faculty (saved only on this device)
             <select
               value={faculty ?? ""}
               onChange={(e) => chooseFaculty(e.target.value)}
-              className="min-h-11 rounded-[10px] border border-[#999999] bg-white px-3 text-sm font-normal text-[#163250] focus:outline-none focus:ring-2 focus:ring-[#2A9D90]"
+              className="min-h-11 rounded-[10px] border border-[#999999] bg-white px-3 text-sm font-normal text-ink focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Prefer not to say</option>
               {Object.entries(facultyLabels).map(([code, label]) => (
@@ -110,21 +110,21 @@ export function HelpCard({ help }: { help: InsightHelp }) {
               return (
                 <li
                   key={option.id}
-                  className="flex flex-col gap-2 rounded-2xl border border-[#D9D9D9] bg-[#A7DADC]/30 p-6"
+                  className="flex flex-col gap-2 rounded-2xl border border-line bg-hero/30 p-6"
                 >
-                  <h3 className="font-serif text-[22px] font-semibold leading-[30px] text-[#163250]">
+                  <h3 className="title-section text-ink">
                     {option.title}
                   </h3>
-                  <p className="text-sm leading-5 text-[#333333]">
+                  <p className="text-sm leading-5 text-body">
                     {option.description}
                   </p>
                   <a
                     href={option.url}
                     target={isPhone ? undefined : "_blank"}
                     rel={isPhone ? undefined : "noopener noreferrer"}
-                    className={`mt-auto inline-flex min-h-11 items-center gap-2 self-start rounded-[10px] text-sm font-medium text-[#163250] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A9D90] ${
+                    className={`mt-auto inline-flex min-h-11 items-center gap-2 self-start rounded-[10px] text-sm font-medium text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                       help.suggest_booking
-                        ? "border border-[#163250] bg-[#163250] px-4 text-white hover:bg-[#1F405D]"
+                        ? "border border-ink bg-ink px-4 text-white hover:bg-ink"
                         : "hover:underline"
                     }`}
                   >

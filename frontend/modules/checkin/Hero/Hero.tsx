@@ -1,21 +1,22 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { MoodFace } from "@/components/UI/MoodFace";
+import { SupportBar } from "@/components/UI/SupportBar";
+import { useRouter, useSearchParams } from "next/navigation";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { submitOrQueue, readQueue } from "@/lib/syncQueue";
-import { api } from "@/lib/api";
+import { api, describeError } from "@/lib/api";
 import { AlreadyCheckedIn } from "./AlreadyCheckedIn";
 import { Saved } from "./Saved";
 
 const moods = [
-  { value: 1, label: "Very low", color: "bg-[#D96B5B]" },
-  { value: 2, label: "Low", color: "bg-[#E7975B]" },
-  { value: 3, label: "Neutral", color: "bg-[#D8D4A2]" },
-  { value: 4, label: "Good", color: "bg-[#67AB83]" },
-  { value: 5, label: "Very good", color: "bg-[#2EB812]" },
+  { value: 1, label: "Very low", color: "bg-mood-1" },
+  { value: 2, label: "Low", color: "bg-mood-2" },
+  { value: 3, label: "Okay", color: "bg-mood-3" },
+  { value: 4, label: "Good", color: "bg-mood-4" },
+  { value: 5, label: "Very good", color: "bg-mood-5" },
 ] as const;
 
 type MoodValue = (typeof moods)[number]["value"];
@@ -39,7 +40,11 @@ function jakartaDateKey(value: string | Date) {
 
 export const Hero = () => {
   const router = useRouter();
-  const [selectedMood, setSelectedMood] = useState<MoodValue | null>(null);
+  // A mood tapped on the landing page arrives as ?mood=1..5 and starts selected.
+  const moodParam = Number(useSearchParams().get("mood"));
+  const [selectedMood, setSelectedMood] = useState<MoodValue | null>(
+    moods.find((m) => m.value === moodParam)?.value ?? null,
+  );
   const [note, setNote] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
@@ -206,9 +211,9 @@ export const Hero = () => {
       setSavedTitle(isUpdating ? "Check-in updated" : "Check-in saved");
       setSavedMessage(outcome.response.insight);
       setIsSaved(true);
-    } catch {
+    } catch (err) {
       setErrorMessage(
-        "We could not save your check-in. Please try again in a moment.",
+        describeError(err, "We could not save your check-in. Please try again in a moment."),
       );
     } finally {
       setIsSaving(false);
@@ -219,152 +224,65 @@ export const Hero = () => {
     <>
       <section
         ref={scope}
-        className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-[#1B363A] select-none"
+        className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-ink select-none"
       >
-        {/* Background Decorative Circles */}
-        <div
-          data-anim="circle"
-          className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-[#E3F2F1]/60 z-0 pointer-events-none"
-        />
-        <div
-          data-anim="circle"
-          className="absolute right-12 top-20 h-32 w-32 rounded-full bg-[#ECE1BE] z-0 pointer-events-none"
-        />
-        <div
-          data-anim="circle"
-          className="absolute left-10 bottom-24 h-40 w-40 rounded-full bg-[#E4A79A]/70 z-0 pointer-events-none"
-        />
-        <div
-          data-anim="circle"
-          className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-[#D8C7E7] z-0 pointer-events-none"
-        />
+        {/* Background blobs, same shapes and colours as the landing page */}
+        <div data-anim="circle" className="blob pointer-events-none absolute -left-20 -top-20 z-0 h-72 w-72 bg-[#CFE3E4] opacity-60" />
+        <div data-anim="circle" className="blob pointer-events-none absolute right-12 top-20 z-0 h-32 w-32 bg-[#ECE1BE] opacity-60" />
+        <div data-anim="circle" className="blob pointer-events-none absolute bottom-24 left-10 z-0 h-40 w-40 bg-[#E4A79A]/70 opacity-60" />
+        <div data-anim="circle" className="blob pointer-events-none absolute -bottom-20 -right-20 z-0 h-80 w-80 bg-[#D8C7E7] opacity-60" />
 
-        {/* Main Container */}
-        <div className="relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
-          {/* Title */}
-          <h1
-            data-anim="title"
-            className="mb-10 font-serif text-3xl font-bold text-[#1F3347] sm:text-4xl"
-          >
+        <div className="relative z-10 flex w-full max-w-[720px] flex-col items-center text-center">
+          <h1 data-anim="title" className="title-page mb-8 text-ink">
             How are you feeling today?
           </h1>
 
-          {/* Mood Selection */}
-          <div className="mb-8 flex items-center justify-center gap-3 sm:gap-6">
-            <span className="text-xs font-semibold text-[#1F3347] sm:text-sm">
-              Very low
-            </span>
-
-            <div className="flex items-center gap-2 sm:gap-4">
-              {moods.map((mood, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  data-anim="mood"
-                  onClick={() => setSelectedMood(mood.value)}
-                  className={`relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#1F3347] transition-transform hover:scale-105 sm:h-14 sm:w-14 ${
-                    mood.color
-                  } ${selectedMood === mood.value ? "ring-4 ring-[#1F3347]/30 scale-110" : ""}`}
+          <div className="mb-8 flex flex-wrap items-start justify-center gap-2 sm:gap-4">
+            {moods.map((mood) => (
+              <button
+                key={mood.value}
+                type="button"
+                data-anim="mood"
+                aria-label={`Mood ${mood.value} of 5, ${mood.label.toLowerCase()}`}
+                aria-pressed={selectedMood === mood.value}
+                onClick={() => setSelectedMood(mood.value)}
+                className="group flex w-20 flex-col items-center gap-2 rounded-2xl py-1 text-sm text-body focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              >
+                <span
+                  className={`flex h-16 w-16 items-center justify-center rounded-full border border-line text-ink transition-transform group-hover:scale-105 ${mood.color} ${
+                    selectedMood === mood.value ? "scale-110 ring-2 ring-ink ring-offset-2" : ""
+                  }`}
                 >
-                  {/* SVG Face Details */}
-                  {idx === 0 && (
-                    <svg
-                      className="w-8 h-8 text-[#1F3347]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <circle cx="9" cy="10" r="1" fill="currentColor" />
-                      <circle cx="15" cy="10" r="1" fill="currentColor" />
-                      <path d="M16 16c-2-1.5-6-1.5-8 0" />
-                    </svg>
-                  )}
-                  {idx === 1 && (
-                    <svg
-                      className="w-8 h-8 text-[#1F3347]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <circle cx="9" cy="10" r="1" fill="currentColor" />
-                      <circle cx="15" cy="10" r="1" fill="currentColor" />
-                      <path d="M15 16c-1.5-1-4.5-1-6 0" />
-                    </svg>
-                  )}
-                  {idx === 2 && (
-                    <svg
-                      className="w-8 h-8 text-[#1F3347]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <circle cx="9" cy="10" r="1" fill="currentColor" />
-                      <circle cx="15" cy="10" r="1" fill="currentColor" />
-                      <line x1="9" y1="15" x2="15" y2="15" />
-                    </svg>
-                  )}
-                  {idx === 3 && (
-                    <svg
-                      className="w-8 h-8 text-[#1F3347]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <circle cx="9" cy="10" r="1" fill="currentColor" />
-                      <circle cx="15" cy="10" r="1" fill="currentColor" />
-                      <path d="M9 15c2 1.5 6 1.5 8 0" />
-                    </svg>
-                  )}
-                  {idx === 4 && (
-                    <svg
-                      className="w-8 h-8 text-[#1F3347]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <path d="M7 9c.5-1 2-1 2.5 0" />
-                      <path d="M14.5 9c.5-1 2-1 2.5 0" />
-                      <path d="M8 14c2 3 6 3 8 0" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <span className="text-xs font-semibold text-[#1F3347] sm:text-sm">
-              Very good
-            </span>
+                  <MoodFace mood={mood.value} className="h-3/4 w-3/4" />
+                </span>
+                <span aria-hidden="true" className={selectedMood === mood.value ? "font-bold text-ink" : ""}>
+                  {mood.label}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* Text Input Container */}
           <div
             data-anim="rise"
-            className={`relative w-full rounded-xl border focus-within:outline-2 focus-within:outline-[#1F3347] border-gray-300 bg-[#E8F3F3] p-4 text-left shadow-sm ${isSaved ? "" : ""}`}
+            className="relative w-full rounded-2xl border border-line bg-white p-6 text-left focus-within:outline-2 focus-within:outline-ink"
           >
+            <label htmlFor="checkin-note" className="mb-2 block text-sm font-semibold text-ink">
+              Add a note (optional)
+            </label>
             <textarea
+              id="checkin-note"
               value={note}
               onChange={handleTextChange}
               placeholder="Deadlines for three courses landed in the same week..."
-              className="h-32 w-full resize-none bg-transparent text-sm text-[#1F3347] placeholder-gray-500 focus:outline-none"
+              className="h-28 w-full resize-none bg-transparent text-base text-ink placeholder-muted focus:outline-none"
             />
-            <div className="text-right text-xs text-gray-500">
+            <div className="text-right text-xs text-muted">
               {note.length} / {maxChars}
             </div>
           </div>
 
-          {/* Warning text */}
           {note.length >= maxChars && (
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-sm text-muted">
               You have reached {maxChars} characters. Extra typing is blocked.
             </p>
           )}
@@ -374,7 +292,7 @@ export const Hero = () => {
             data-anim="rise"
             onClick={handleSave}
             disabled={isSaving}
-            className="mt-6 w-full rounded-lg bg-[#A3D9D9] py-3 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-[#8ECFCE] disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 min-h-12 w-full rounded-btn bg-primary px-6 text-[19px] font-bold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving
               ? isUpdating
@@ -386,26 +304,20 @@ export const Hero = () => {
           </button>
 
           {errorMessage && (
-            <p className="mt-2 text-xs text-red-700" role="alert">
+            <p className="mt-2 text-sm text-red-700" role="alert">
               {errorMessage}
             </p>
           )}
 
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-sm text-muted">
             {isUpdating
               ? "You are updating today’s check-in."
               : "One check-in per day. Pick a mood to save."}
           </p>
 
-          {/* Need to talk to someone Button */}
-          <Link
-            href="/support"
-            data-anim="rise"
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#D3C1E5] py-3 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-[#C5B0DA]"
-          >
-            <span>Need to talk to someone?</span>
-            <span>&rarr;</span>
-          </Link>
+          <div data-anim="rise" className="mt-6 w-full">
+            <SupportBar />
+          </div>
         </div>
       </section>
 

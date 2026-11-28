@@ -27,19 +27,19 @@ export const Saved: React.FC<SavedProps> = ({
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl"
       >
-        <h3 className="font-serif text-2xl font-bold text-[#1F3347]">
+        <h3 className="title-section text-ink">
           {title}
         </h3>
-        <p className="mt-2 text-sm text-gray-600">{message}</p>
+        <p className="mt-2 text-sm text-muted">{message}</p>
 
         <div className="mt-6 flex justify-center">
           <Link
             href="/dashboard"
             onClick={onClose}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-gray-50"
+            className="inline-flex min-h-12 items-center gap-2 rounded-btn border border-line bg-white px-6 text-base font-bold text-ink transition-colors hover:bg-tint"
           >
             <span>See your week</span>
-            <span>&rarr;</span>
+            <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>

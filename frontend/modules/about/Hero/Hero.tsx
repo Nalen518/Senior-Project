@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import { SupportBar } from "@/components/UI/SupportBar";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -45,46 +46,46 @@ export const Hero = () => {
     <>
       <section
         ref={scope}
-        className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-[#1F3347] sm:px-6"
+        className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-ink sm:px-6"
       >
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -left-12 top-16 h-28 w-28 rounded-full bg-[#E4A79A]"
+          className="pointer-events-none absolute -left-12 top-16 h-28 w-28 blob bg-[#E4A79A] opacity-60"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 rounded-full bg-[#ECE1BE]"
+          className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 blob bg-[#ECE1BE] opacity-60"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -right-10 top-36 h-32 w-32 rounded-full bg-[#D3C1E5]"
+          className="pointer-events-none absolute -right-10 top-36 h-32 w-32 blob bg-support opacity-60"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute right-12 top-[20rem] h-20 w-20 rounded-full bg-[#D3C1E5]"
+          className="pointer-events-none absolute right-12 top-[20rem] h-20 w-20 blob bg-support opacity-60"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -left-10 bottom-4 h-32 w-44 rounded-full bg-[#ECE1BE]"
+          className="pointer-events-none absolute -left-10 bottom-4 h-32 w-44 blob bg-[#ECE1BE] opacity-60"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -right-12 bottom-0 h-28 w-28 rounded-full bg-[#E3F2F1]"
+          className="pointer-events-none absolute -right-12 bottom-0 h-28 w-28 blob bg-tint opacity-60"
         />
 
-        <div className="relative mx-auto max-w-2xl">
+        <div className="relative mx-auto max-w-[720px]">
           <header data-anim="title">
-            <h1 className="font-serif text-3xl font-bold sm:text-4xl">
+            <h1 className="title-page">
               About MindMeter
             </h1>
-            <p className="mt-1 text-sm text-[#3D4D59]">
+            <p className="mt-1 text-sm text-muted">
               A private daily check-in for UGM students.
             </p>
           </header>
 
-          <div className="mt-6 space-y-6 text-sm text-[#3D4D59]">
+          <div className="mt-6 space-y-6 text-sm text-muted">
             <section data-anim="rise">
-              <h2 className="font-serif text-lg font-bold text-[#1F3347]">
+              <h2 className="title-section text-ink">
                 What it is
               </h2>
               <p className="mt-2 leading-relaxed">
@@ -95,7 +96,7 @@ export const Hero = () => {
             </section>
 
             <section data-anim="rise">
-              <h2 className="font-serif text-lg font-bold text-[#1F3347]">
+              <h2 className="title-section text-ink">
                 What it is not
               </h2>
               <p className="mt-2 leading-relaxed">
@@ -106,7 +107,7 @@ export const Hero = () => {
             </section>
 
             <section data-anim="rise">
-              <h2 className="font-serif text-lg font-bold text-[#1F3347]">
+              <h2 className="title-section text-ink">
                 Your privacy
               </h2>
 
@@ -126,7 +127,7 @@ export const Hero = () => {
             </section>
 
             <section data-anim="rise">
-              <h2 className="font-serif text-lg font-bold text-[#1F3347]">
+              <h2 className="title-section text-ink">
                 If you need help
               </h2>
               <p className="mt-2 leading-relaxed">
@@ -135,30 +136,17 @@ export const Hero = () => {
 
               <Link
                 href="/support"
-                className="mt-3 inline-flex rounded-lg bg-[#F6A15E] px-5 py-2.5 text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                className="mt-3 inline-flex min-h-11 items-center rounded-btn bg-accent px-5 py-2 text-base font-bold text-ink transition-colors hover:bg-accent-hover"
               >
                 See support contacts
               </Link>
             </section>
           </div>
 
-          <footer
-            data-anim="rise"
-            className="mt-8 border-t border-[#C8CED0] pt-2"
-          >
-            <p className="text-[10px] text-[#5E6A70]">
-              MindMeter is a senior project at DTETI, Universitas Gadjah Mada,
-              2026.
-            </p>
-
-            <Link
-              href="/support"
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C9AFD8] px-5 py-3 text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#B99BCB]"
-            >
-              Need to talk to someone?
-              <span aria-hidden="true">&rarr;</span>
-            </Link>
-          </footer>
+          {/* The project credit lives in the site footer. */}
+          <div data-anim="rise" className="mt-8">
+            <SupportBar />
+          </div>
         </div>
       </section>
     </>
