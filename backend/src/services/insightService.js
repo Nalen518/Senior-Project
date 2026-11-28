@@ -40,7 +40,7 @@ function createInsightService({ models, config, clock = () => new Date() }) {
         recentCrisis,
         hasBooking: bookingOptions.length > 0,
       });
-      return { trend: t.trend, message: t.message, themes, resources, help: { ...help, booking_options: bookingOptions } };
+      return { trend: t.trend, message: t.message, has_enough_data: t.hasEnoughData, themes, resources, help: { ...help, booking_options: bookingOptions } };
     },
   };
 }

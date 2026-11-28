@@ -18,6 +18,7 @@ export const offlineSupportResources: OfflineSupportResource[] = [
     url: "https://wa.me/6281329520052",
     tags: [],
     faculty: null,
+    support_group:"crisis",
     verified_at: "2026-11-23",
   },
   {
@@ -28,6 +29,7 @@ export const offlineSupportResources: OfflineSupportResource[] = [
     url: "tel:02746491234",
     tags: [],
     faculty: null,
+    support_group:"crisis",
     verified_at: "2026-11-23",
   },
   {
@@ -39,6 +41,7 @@ export const offlineSupportResources: OfflineSupportResource[] = [
     url: "https://www.healing119.id/",
     tags: ["isolation"],
     faculty: null,
+    support_group:"crisis",
     verified_at: "2026-11-23",
   },
 ];

@@ -48,7 +48,7 @@ function computeTrend(entries, today) {
     .sort((a, b) => a.check_date.localeCompare(b.check_date));
 
   if (recent.length < MIN_ENTRIES) {
-    return { trend: 'stable', message: MESSAGES.notEnough, needsSupport: false, average7: null, lowStreak: 0 };
+    return { trend: 'stable', message: MESSAGES.notEnough, needsSupport: false, hasEnoughData: false, average7: null, lowStreak: 0 };
   }
 
   const moods = recent.map((e) => e.mood_value);
@@ -71,7 +71,7 @@ function computeTrend(entries, today) {
   else if (average7 <= LOW_AVERAGE) message = MESSAGES.low;
   else message = MESSAGES.stable;
 
-  return { trend, message, needsSupport, average7: Math.round(average7 * 100) / 100, lowStreak: streak };
+  return { trend, message, needsSupport, hasEnoughData: true, average7: Math.round(average7 * 100) / 100, lowStreak: streak };
 }
 
 module.exports = {

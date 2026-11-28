@@ -37,6 +37,8 @@ export type Trend = 'stable' | 'declining' | 'improving';
 /** A support contact or self-help resource. The primary crisis contact always comes first. */
 //export type ResourceType = "crisis" | "counselling" | "self_help";
 
+export type SupportGroup = 'crisis' | 'university' | 'faculty' | 'clinic' | 'self_help';
+
 export interface Resource {
   id: Uuid;
   title: string;
@@ -47,6 +49,7 @@ export interface Resource {
   tags: ThemeCode[];
   /** null = open to all UGM students. Otherwise only that faculty's students can use it. */
   faculty: FacultyCode | null;
+  support_group: SupportGroup;
 }
 
 /**
@@ -115,8 +118,18 @@ export interface CheckinCrisis {
   crisis_flag: true;
 }
 
+/**
+ * A newer check-in already exists for this Jakarta calendar day, so the
+ * submitted older entry was not written.
+ */
+export interface CheckinNotSaved {
+  id: Uuid;
+  saved: false;
+  crisis_flag: boolean;
+}
+
 /** Check `crisis_flag` first; TypeScript then knows whether `insight` exists. */
-export type CheckinResponse = CheckinSaved | CheckinCrisis;
+export type CheckinResponse = CheckinSaved | CheckinCrisis | CheckinNotSaved;
 
 // ---------------------------------------------------------------- POST /api/checkins/sync
 
@@ -161,6 +174,8 @@ export interface InsightResponse {
   trend: Trend;
   /** Plain-language English sentence to show as-is. */
   message: string;
+  /** True when the backend has at least three check-ins in the last seven WIB days. */
+  has_enough_data: boolean;
   /** Top 3 themes (most frequent first) from the last 14 days of notes (empty until Stage 2 NLP is switched on). */
   themes: ThemeCode[];
   /** Up to 3 matched resources. May be empty. */

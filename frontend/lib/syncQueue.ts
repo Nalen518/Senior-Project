@@ -24,6 +24,39 @@ export function readQueue(): SyncQueue {
   }
 }
 
+function jakartaDateKey(value: string | Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(value));
+
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
+function saveQueuedCheckin(item: SyncItem): boolean {
+  const queue = readQueue();
+  const itemDay = jakartaDateKey(item.client_ts);
+
+  const existingIndex = queue.findIndex(
+    (queuedItem) => jakartaDateKey(queuedItem.client_ts) === itemDay,
+  );
+
+  if (existingIndex >= 0) {
+    queue[existingIndex] = item;
+    writeQueue(queue);
+    return true;
+  }
+
+  writeQueue([...queue, item]);
+  return false;
+}
+
 function writeQueue(queue: SyncQueue): void {
   localStorage.setItem(KEY, JSON.stringify(queue));
 
@@ -33,8 +66,8 @@ function writeQueue(queue: SyncQueue): void {
 
 /** What the check-in screen gets back. */
 export type SubmitOutcome =
-  | { kind: "saved"; response: CheckinResponse } // check response.crisis_flag first!
-  | { kind: "queued" }; // offline: show "Tersimpan — akan dikirim saat online"
+  | { kind: "saved"; response: CheckinResponse }
+  | { kind: "queued"; replaced: boolean };
 
 /** Use this from the check-in screen instead of api.submitCheckin. */
 export async function submitOrQueue(
@@ -49,8 +82,12 @@ export async function submitOrQueue(
       note_text: body.note_text ?? null,
       client_ts: new Date().toISOString(), // when the student actually tapped
     };
-    writeQueue([...readQueue(), item]);
-    return { kind: "queued" };
+    const replaced = saveQueuedCheckin(item);
+
+    return {
+      kind: "queued",
+      replaced,
+    };
   }
 }
 

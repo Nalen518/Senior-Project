@@ -56,16 +56,16 @@ describe('MindMeter API', { skip }, () => {
     await pool.query(fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'models', 'schema.sql'), 'utf8'));
     await pool.query('INSERT INTO crisis_keywords (phrase) VALUES ($1)', [CRISIS_PHRASE]);
     await pool.query(`
-      INSERT INTO resources (title, description, phone, type, is_primary_crisis, sort_order)
-        VALUES ('Kontak krisis (uji)', 'Kontak uji', '+62 000-0000', 'crisis', true, 0);
-      INSERT INTO resources (title, description, url, type, sort_order)
-        VALUES ('Tips tidur (uji)', 'Sumber uji', 'https://example.org/tidur', 'self_help', 1);
+      INSERT INTO resources (title, description, phone, type, is_primary_crisis, sort_order, support_group)
+        VALUES ('Kontak krisis (uji)', 'Kontak uji', '+62 000-0000', 'crisis', true, 0, 'crisis');
+      INSERT INTO resources (title, description, url, type, sort_order, support_group)
+        VALUES ('Tips tidur (uji)', 'Sumber uji', 'https://example.org/tidur', 'self_help', 1, 'self_help');
       INSERT INTO resource_themes (resource_id, theme_id)
         SELECT r.id, t.id FROM resources r, themes t WHERE r.title = 'Tips tidur (uji)' AND t.code = 'sleep';
-      INSERT INTO resources (title, description, url, type, sort_order)
-        VALUES ('Konseling UGM (uji)', 'Sumber uji', 'https://example.org/ugm', 'counselling', 2);
-      INSERT INTO resources (title, description, url, type, sort_order, faculty)
-        VALUES ('Konseling FT (uji)', 'Sumber uji', 'https://example.org/ft', 'counselling', 3, 'engineering');`);
+      INSERT INTO resources (title, description, url, type, sort_order, support_group)
+        VALUES ('Konseling UGM (uji)', 'Sumber uji', 'https://example.org/ugm', 'counselling', 2, 'university');
+      INSERT INTO resources (title, description, url, type, sort_order, faculty, support_group)
+        VALUES ('Konseling FT (uji)', 'Sumber uji', 'https://example.org/ft', 'counselling', 3, 'engineering', 'faculty');`);
 
     const config = {
       timeZone: 'Asia/Jakarta',
@@ -153,7 +153,7 @@ describe('MindMeter API', { skip }, () => {
   test('GET /api/insights returns trend, message, themes from Stage 2, matched resources', async () => {
     const res = await call('GET', '/api/insights');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body).sort(), ['help', 'message', 'resources', 'themes', 'trend']);
+    assert.deepEqual(Object.keys(res.body).sort(), ['has_enough_data', 'help', 'message', 'resources', 'themes', 'trend']);
     assert.ok(['stable', 'declining', 'improving'].includes(res.body.trend));
     assert.deepEqual(res.body.themes, ['sleep', 'workload']);
     assert.equal(res.body.resources[0].title, 'Tips tidur (uji)');
@@ -183,15 +183,14 @@ describe('MindMeter API', { skip }, () => {
   test('GET /api/resources: primary crisis contact first, phone as tel: link', async () => {
     const res = await call('GET', '/api/resources');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'faculty', 'id', 'tags', 'title', 'url']);
+    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'faculty', 'id', 'support_group', 'tags', 'title', 'url']);
     assert.equal(res.body[0].url, 'tel:+620000000');
     assert.deepEqual(res.body[1].tags, ['sleep']);
   });
 
-  test('GET /api/resources leaves out faculty-only services (they would turn other students away)', async () => {
+  test('GET /api/resources includes active faculty counselling services', async () => {
     const res = await call('GET', '/api/resources');
-    assert.ok(res.body.every((r) => r.faculty === null));
-    assert.equal(res.body.some((r) => r.title === 'Konseling FT (uji)'), false);
+    assert.equal(res.body.some((r) => r.title === 'Konseling FT (uji)' && r.faculty === 'engineering'), true);
   });
 
   test('rate limit: 429 RATE_LIMITED after the limit, but /api/resources always answers', async () => {
