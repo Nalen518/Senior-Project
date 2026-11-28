@@ -35,18 +35,22 @@ export const facultyOptions: Array<{
 ];
 
 export function readFaculty(): FacultyCode | null {
-  const stored = localStorage.getItem(FACULTY_KEY);
-
-  return facultyOptions.some((faculty) => faculty.value === stored)
-    ? (stored as FacultyCode)
-    : null;
+  try {
+    const stored = localStorage.getItem(FACULTY_KEY);
+    return facultyOptions.some((faculty) => faculty.value === stored)
+      ? (stored as FacultyCode)
+      : null;
+  } catch {
+    return null; // storage blocked: behave as "Prefer not to say"
+  }
 }
 
 export function saveFaculty(faculty: FacultyCode | null) {
-  if (faculty) {
-    localStorage.setItem(FACULTY_KEY, faculty);
-  } else {
-    localStorage.removeItem(FACULTY_KEY);
+  try {
+    if (faculty) localStorage.setItem(FACULTY_KEY, faculty);
+    else localStorage.removeItem(FACULTY_KEY);
+  } catch {
+    // Storage blocked: the choice still works until the page reloads.
   }
 }
 
