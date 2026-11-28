@@ -29,8 +29,8 @@ contract drift apart, CI fails. Changing an endpoint = one PR that changes `cont
 | POST | `/api/checkins` | `{ mood_value 1-5, note_text?, client_ts? }` | `{ id, saved, insight?, crisis_flag }` |
 | POST | `/api/checkins/sync` | `[{ mood_value, note_text?, client_ts }]` (max 50) | `[{ client_ts, id, saved, crisis_flag }]` |
 | GET  | `/api/checkins` | — | `[{ id, mood_value, note_text, created_at }]` |
-| GET  | `/api/insights` | — | `{ trend, message, themes[], resources[], help }` |
-| GET  | `/api/resources` | — | `[{ id, title, description, url, tags, faculty }]` |
+| GET  | `/api/insights` | — | `{ trend, message, has_enough_data, themes[], resources[], help }` |
+| GET  | `/api/resources` | — | `[{ id, title, description, url, tags, faculty, support_group }]` |
 
 Implementation details the frontend must know (agree these as a team):
 
@@ -97,9 +97,18 @@ Requires Node.js 22+ and a PostgreSQL database.
 cd backend
 npm install
 cp .env.example .env          # then fill in DATABASE_URL (and DB_SSL=false for a local DB)
-npm run db:migrate            # creates all tables (safe to run twice)
+npm run db:migrate            # creates the tables, or upgrades an existing database (safe to run again)
+npm run db:seed-safety        # crisis keywords and support contacts; run again after an upgrade
 npm run dev                   # http://localhost:3000, restarts on file changes
 ```
+
+### Ports and CORS
+
+| Setting | Default | When the default is busy |
+|---------|---------|--------------------------|
+| `PORT` (API) | `3000` | `3002`, for example when a local PostgreSQL holds 3000. Then start the frontend with `NEXT_PUBLIC_API_URL=http://localhost:3002` |
+| Frontend | `3001` | `3005` |
+| `CORS_ORIGIN` | any origin when empty (development only) | Comma list of frontend origins, for example `http://localhost:3001,http://localhost:3005` |
 
 Demo account for the presentation (so the dashboard is never empty):
 

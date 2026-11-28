@@ -231,6 +231,7 @@ erDiagram
     text url
     text phone
     resource_type type
+    support_group support_group
     boolean is_primary_crisis
     smallint sort_order
     text faculty

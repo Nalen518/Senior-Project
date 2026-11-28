@@ -76,7 +76,7 @@ CREATE TABLE resources (
     url                TEXT,
     phone              TEXT,
     type               resource_type NOT NULL,
-    support_group      support_group NOT NULL DEFAULT 'self_help',
+    support_group      support_group NOT NULL, -- no default: a resource without a group must fail
     is_primary_crisis  BOOLEAN       NOT NULL DEFAULT false, -- shown first on the crisis screen
     sort_order         SMALLINT      NOT NULL DEFAULT 0,
     faculty            TEXT          CHECK (faculty ~ '^[a-z_]+$'), -- NULL = UGM-wide, else that faculty's students only
