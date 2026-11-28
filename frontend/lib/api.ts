@@ -27,6 +27,16 @@ export class ApiError extends Error {
 /** The request never reached the server (offline, DNS, CORS). Check-ins go to the offline queue. */
 export class NetworkError extends Error {}
 
+/** Calm copy for a failed request (MM-603). `fallback` covers 4xx errors not listed here. */
+export function describeError(err: unknown, fallback: string): string {
+  if (err instanceof NetworkError) return 'We could not reach MindMeter. Check your connection and try again.';
+  if (!(err instanceof ApiError)) return fallback;
+  if (err.status === 429) return 'You are going a little fast. Please wait a minute and try again.';
+  if (err.status === 401) return 'This browser could not be recognised. Please reload the page and try again.';
+  if (err.status >= 500) return 'Something went wrong on our side. Please try again in a moment.';
+  return fallback;
+}
+
 async function request<K extends EndpointKey>(
   key: K,
   body?: Endpoints[K]['request'],
