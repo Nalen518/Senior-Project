@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { api } from "@/lib/api";
 import { flushQueue, readQueue } from "@/lib/syncQueue";
 import type { SyncItem } from "../../../../shared/contract";
@@ -94,6 +96,57 @@ export const Hero = () => {
     null,
   );
   const [showTodayReminder, setShowTodayReminder] = useState(false);
+
+  const scope = useRef<HTMLElement>(null);
+
+  // 1. Static background & header — runs once on mount
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap
+          .timeline({ defaults: { ease: "power3.out", duration: 0.7 } })
+          .from("[data-anim=circle]", {
+            scale: 0.6,
+            autoAlpha: 0,
+            stagger: 0.1,
+            duration: 1.2,
+          })
+          .from("[data-anim=title]", { y: 24, autoAlpha: 0 }, 0.2);
+
+        gsap.to("[data-anim=circle]", {
+          y: "random(-18, 18)",
+          x: "random(-12, 12)",
+          duration: "random(5, 8)",
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+          delay: 1.2,
+        });
+      });
+    },
+    { scope },
+  );
+
+  // 2. Loaded content — runs once when loading finishes
+  useGSAP(
+    () => {
+      if (isLoading) return;
+
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.from("[data-anim=rise]", {
+          y: 16,
+          autoAlpha: 0,
+          duration: 0.7,
+          ease: "power3.out",
+          stagger: 0.1,
+          clearProps: "transform,opacity,visibility",
+        });
+      });
+    },
+    { scope, dependencies: [isLoading] },
+  );
 
   const hasNoCheckins =
     !isLoading &&
@@ -288,9 +341,13 @@ export const Hero = () => {
     setSelectedFaculty(faculty);
     saveFaculty(faculty);
   };
+
   return (
     <>
-      <main className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-[#1F3347] sm:px-6">
+      <main
+        ref={scope}
+        className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-[#1F3347] sm:px-6"
+      >
         {showTodayReminder && (
           <div className="fixed inset-0 z-[45] flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
             <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
@@ -321,14 +378,30 @@ export const Hero = () => {
             </div>
           </div>
         )}
-        <div className="pointer-events-none absolute -left-12 top-16 h-28 w-28 rounded-full bg-[#E4A79A]" />
-        <div className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 rounded-full bg-[#ECE1BE]" />
-        <div className="pointer-events-none absolute -right-10 top-36 h-32 w-32 rounded-full bg-[#D3C1E5]" />
-        <div className="pointer-events-none absolute -left-10 bottom-64 h-28 w-36 rounded-full bg-[#D3C1E5]" />
-        <div className="pointer-events-none absolute -right-10 bottom-24 h-28 w-28 rounded-full bg-[#E3F2F1]" />
+
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-12 top-16 h-28 w-28 rounded-full bg-[#E4A79A]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 rounded-full bg-[#ECE1BE]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-10 top-36 h-32 w-32 rounded-full bg-[#D3C1E5]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-10 bottom-64 h-28 w-36 rounded-full bg-[#D3C1E5]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-10 bottom-24 h-28 w-28 rounded-full bg-[#E3F2F1]"
+        />
 
         <div className="relative mx-auto max-w-5xl">
-          <header>
+          <header data-anim="title">
             <h1 className="font-serif text-3xl font-bold sm:text-4xl">
               Your wellbeing overview
             </h1>
@@ -338,7 +411,10 @@ export const Hero = () => {
           </header>
 
           {hasNoCheckins && (
-            <section className="mt-5 rounded-xl border border-[#C9DCDD] bg-[#E3F2F1]  p-5">
+            <section
+              data-anim="rise"
+              className="mt-5 rounded-xl border border-[#C9DCDD] bg-[#E3F2F1] p-5"
+            >
               <h2 className="font-serif text-lg font-bold">No check-in yet</h2>
 
               <p className="mt-1 text-sm text-[#3D4D59]">
@@ -355,7 +431,10 @@ export const Hero = () => {
           )}
 
           {queuedCount > 0 && (
-            <section className="mt-5 flex flex-col gap-3 rounded-lg border border-[#C9DCDD] bg-[#E3F2F1] p-3 sm:flex-row sm:items-center sm:justify-between">
+            <section
+              data-anim="rise"
+              className="mt-5 flex flex-col gap-3 rounded-lg border border-[#C9DCDD] bg-[#E3F2F1] p-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div>
                 <p className="text-sm font-bold">
                   Your check-in is safe on this device.
@@ -389,7 +468,10 @@ export const Hero = () => {
           )}
 
           {errorMessage && (
-            <p className="mt-5 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+            <p
+              data-anim="rise"
+              className="mt-5 rounded-lg bg-red-50 p-4 text-sm text-red-700"
+            >
               {errorMessage}
             </p>
           )}
@@ -400,7 +482,10 @@ export const Hero = () => {
             </p>
           ) : (
             <>
-              <section className="mt-5 grid gap-4 lg:grid-cols-[1.7fr_0.95fr]">
+              <section
+                data-anim="rise"
+                className="mt-5 grid gap-4 lg:grid-cols-[1.7fr_0.95fr]"
+              >
                 <article className="rounded-xl bg-[#E3F2F1] p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -585,9 +670,15 @@ export const Hero = () => {
                   </article>
                 )}
               </section>
-              {insight?.help ? <HelpCard help={insight.help} /> : null}
+
+              {insight?.help ? (
+                <div data-anim="rise">
+                  <HelpCard help={insight.help} />
+                </div>
+              ) : null}
+
               {hasEnoughInsightData && insight?.resources.length ? (
-                <section className="mt-6">
+                <section data-anim="rise" className="mt-6">
                   <h2 className="font-serif text-lg font-bold">
                     Suggested resources
                   </h2>
@@ -626,82 +717,8 @@ export const Hero = () => {
                 </section>
               ) : null}
 
-              {/* <section className="mt-6 rounded-xl border border-[#D5E1E2] bg-white p-4">
-                <h2 className="font-serif text-lg font-bold">
-                  Find a counsellor
-                </h2>
-
-                <p className="mt-1 text-sm text-[#3D4D59]">
-                  Choose your faculty to see counselling services available to
-                  you. This choice stays only in this browser.
-                </p>
-
-                <label className="mt-4 block text-sm font-semibold text-[#1F405D]">
-                  Your faculty
-                  <select
-                    value={selectedFaculty ?? ""}
-                    onChange={(event) =>
-                      handleFacultyChange(event.target.value)
-                    }
-                    className="mt-2 w-full rounded-lg border border-[#9FB7B9] bg-white px-3 py-2 text-sm text-[#1F405D] outline-none focus:ring-2 focus:ring-[#2A9D90]"
-                  >
-                    <option value="">Choose your faculty</option>
-
-                    {facultyOptions.map((faculty) => (
-                      <option key={faculty.value} value={faculty.value}>
-                        {faculty.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                {!selectedFaculty && (
-                  <p className="mt-4 text-sm text-[#3D4D59]">
-                    Choose your faculty to see relevant faculty counselling
-                    services. UGM-wide services are also available below.
-                  </p>
-                )}
-
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {bookingOptions.length === 0 ? (
-                    <p className="text-sm text-[#3D4D59]">
-                      Counselling contacts will appear here once they are
-                      available.
-                    </p>
-                  ) : (
-                    bookingOptions.map((resource) => {
-                      const isPhoneLink = resource.url.startsWith("tel:");
-
-                      return (
-                        <article
-                          key={resource.id}
-                          className="rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4"
-                        >
-                          <h3 className="font-serif font-bold">
-                            {resource.title}
-                          </h3>
-
-                          <p className="mt-2 text-xs text-[#3D4D59]">
-                            {resource.description}
-                          </p>
-
-                          <a
-                            href={resource.url}
-                            target={isPhoneLink ? undefined : "_blank"}
-                            rel={isPhoneLink ? undefined : "noreferrer"}
-                            className="mt-4 inline-flex text-xs font-bold underline"
-                          >
-                            {isPhoneLink ? "Call" : "Open booking"} →
-                          </a>
-                        </article>
-                      );
-                    })
-                  )}
-                </div>
-              </section> */}
-
               {!errorMessage && (
-                <section className="mt-6">
+                <section data-anim="rise" className="mt-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-baseline gap-2">
                       <h2 className="font-serif text-lg font-bold">
@@ -835,6 +852,7 @@ export const Hero = () => {
 
           <Link
             href="/support"
+            data-anim="rise"
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C9AFD8] px-5 py-3 text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#B99BCB]"
           >
             Need to talk to someone?

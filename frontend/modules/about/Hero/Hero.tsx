@@ -1,18 +1,79 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export const Hero = () => {
+  const scope = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap
+          .timeline({ defaults: { ease: "power3.out", duration: 0.7 } })
+          .from("[data-anim=circle]", {
+            scale: 0.6,
+            autoAlpha: 0,
+            stagger: 0.1,
+            duration: 1.2,
+          })
+          .from("[data-anim=title]", { y: 24, autoAlpha: 0 }, 0.2)
+          .from(
+            "[data-anim=rise]",
+            { y: 16, autoAlpha: 0, stagger: 0.1 },
+            0.45,
+          );
+
+        gsap.to("[data-anim=circle]", {
+          y: "random(-18, 18)",
+          x: "random(-12, 12)",
+          duration: "random(5, 8)",
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+          delay: 1.2,
+        });
+      });
+    },
+    { scope },
+  );
+
   return (
     <>
-      <section className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-[#1F3347] sm:px-6">
-        <div className="pointer-events-none absolute -left-12 top-16 h-28 w-28 rounded-full bg-[#E4A79A]" />
-        <div className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 rounded-full bg-[#ECE1BE]" />
-        <div className="pointer-events-none absolute -right-10 top-36 h-32 w-32 rounded-full bg-[#D3C1E5]" />
-        <div className="pointer-events-none absolute right-12 top-[20rem] h-20 w-20 rounded-full bg-[#D3C1E5]" />
-        <div className="pointer-events-none absolute -left-10 bottom-4 h-32 w-44 rounded-full bg-[#ECE1BE]" />
-        <div className="pointer-events-none absolute -right-12 bottom-0 h-28 w-28 rounded-full bg-[#E3F2F1]" />
+      <section
+        ref={scope}
+        className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-[#1F3347] sm:px-6"
+      >
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-12 top-16 h-28 w-28 rounded-full bg-[#E4A79A]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 rounded-full bg-[#ECE1BE]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-10 top-36 h-32 w-32 rounded-full bg-[#D3C1E5]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute right-12 top-[20rem] h-20 w-20 rounded-full bg-[#D3C1E5]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-10 bottom-4 h-32 w-44 rounded-full bg-[#ECE1BE]"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-12 bottom-0 h-28 w-28 rounded-full bg-[#E3F2F1]"
+        />
 
         <div className="relative mx-auto max-w-2xl">
-          <header>
+          <header data-anim="title">
             <h1 className="font-serif text-3xl font-bold sm:text-4xl">
               About MindMeter
             </h1>
@@ -22,7 +83,7 @@ export const Hero = () => {
           </header>
 
           <div className="mt-6 space-y-6 text-sm text-[#3D4D59]">
-            <section>
+            <section data-anim="rise">
               <h2 className="font-serif text-lg font-bold text-[#1F3347]">
                 What it is
               </h2>
@@ -33,7 +94,7 @@ export const Hero = () => {
               </p>
             </section>
 
-            <section>
+            <section data-anim="rise">
               <h2 className="font-serif text-lg font-bold text-[#1F3347]">
                 What it is not
               </h2>
@@ -44,7 +105,7 @@ export const Hero = () => {
               </p>
             </section>
 
-            <section>
+            <section data-anim="rise">
               <h2 className="font-serif text-lg font-bold text-[#1F3347]">
                 Your privacy
               </h2>
@@ -64,7 +125,7 @@ export const Hero = () => {
               </div>
             </section>
 
-            <section>
+            <section data-anim="rise">
               <h2 className="font-serif text-lg font-bold text-[#1F3347]">
                 If you need help
               </h2>
@@ -81,7 +142,10 @@ export const Hero = () => {
             </section>
           </div>
 
-          <footer className="mt-8 border-t border-[#C8CED0] pt-2">
+          <footer
+            data-anim="rise"
+            className="mt-8 border-t border-[#C8CED0] pt-2"
+          >
             <p className="text-[10px] text-[#5E6A70]">
               MindMeter is a senior project at DTETI, Universitas Gadjah Mada,
               2026.

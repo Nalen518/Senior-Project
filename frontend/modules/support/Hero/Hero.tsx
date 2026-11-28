@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import { api } from "@/lib/api";
 import { offlineSupportResources } from "@/constant/offlineSupport";
 
@@ -16,6 +17,61 @@ export const Hero = () => {
   const crisisResources = resources.filter(
     (resource) => resource.support_group === "crisis",
   );
+
+  const scope = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (prefersReduced || !scope.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap
+        .timeline({ defaults: { ease: "power2.out", duration: 0.65 } })
+        .from(
+          "[data-anim=circle]",
+          {
+            opacity: 0,
+            y: 10,
+            stagger: 0.08,
+            duration: 0.9,
+          },
+          0,
+        )
+        .from(
+          "[data-anim=title]",
+          {
+            opacity: 0,
+            y: 14,
+            clearProps: "transform,opacity",
+          },
+          0.12,
+        )
+        .from(
+          "[data-anim=rise]",
+          {
+            opacity: 0,
+            y: 12,
+            stagger: 0.08,
+            clearProps: "transform,opacity",
+          },
+          0.24,
+        );
+
+      gsap.to("[data-anim=circle]", {
+        y: "+=10",
+        duration: 4.5,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        stagger: { each: 0.4, from: "random" },
+        delay: 1.25,
+      });
+    }, scope);
+
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     const loadResources = async () => {
@@ -45,15 +101,33 @@ export const Hero = () => {
 
   return (
     <>
-      <main className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-[#1F3347] sm:px-6">
-        <div className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full bg-[#E4A79A]" />
-        <div className="pointer-events-none absolute right-20 top-24 h-20 w-20 rounded-full bg-[#ECE1BE]" />
-        <div className="pointer-events-none absolute -right-12 top-40 h-36 w-36 rounded-full bg-[#D3C1E5]" />
-        <div className="pointer-events-none absolute -left-10 bottom-24 h-36 w-36 rounded-full bg-[#ECE1BE]" />
-        <div className="pointer-events-none absolute -right-10 bottom-14 h-40 w-40 rounded-full bg-[#E3F2F1]" />
+      <main
+        ref={scope}
+        className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-[#1F3347] sm:px-6"
+      >
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full bg-[#E4A79A] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute right-20 top-24 h-20 w-20 rounded-full bg-[#ECE1BE] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-12 top-40 h-36 w-36 rounded-full bg-[#D3C1E5] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -left-10 bottom-24 h-36 w-36 rounded-full bg-[#ECE1BE] will-change-transform"
+        />
+        <div
+          data-anim="circle"
+          className="pointer-events-none absolute -right-10 bottom-14 h-40 w-40 rounded-full bg-[#E3F2F1] will-change-transform"
+        />
 
         <div className="relative mx-auto max-w-3xl">
-          <header className="mb-5">
+          <header data-anim="title" className="mb-5 will-change-transform">
             <h1 className="font-serif text-3xl font-bold sm:text-4xl">
               Support at UGM
             </h1>
@@ -62,9 +136,11 @@ export const Hero = () => {
               pointing you to help. It is not medical advice.
             </p>
           </header>
+
           {resourceSource === "offline" && (
             <section
-              className="mb-5 rounded-xl border border-[#CFE3E4] bg-[#EAF4F4] px-5 py-4 text-[#1F3347] shadow-xs sm:px-6"
+              data-anim="rise"
+              className="mb-5 rounded-xl border border-[#CFE3E4] bg-[#EAF4F4] px-5 py-4 text-[#1F3347] shadow-xs will-change-transform sm:px-6"
               role="status"
             >
               <h2 className="font-serif text-lg font-bold">You are offline.</h2>
@@ -75,7 +151,10 @@ export const Hero = () => {
             </section>
           )}
 
-          <section className="rounded-xl bg-[#C9AFD8] p-4 shadow-sm sm:p-5">
+          <section
+            data-anim="rise"
+            className="rounded-xl bg-[#C9AFD8] p-4 shadow-sm will-change-transform sm:p-5"
+          >
             <h2 className="font-serif text-lg font-bold">
               If you need help right now
             </h2>
@@ -140,7 +219,7 @@ export const Hero = () => {
           </section>
 
           {resourceSource !== "offline" && (
-            <section className="mt-5">
+            <section data-anim="rise" className="mt-5 will-change-transform">
               <h2 className="font-serif text-lg font-bold">
                 Talk to a counsellor
               </h2>
@@ -222,7 +301,10 @@ export const Hero = () => {
             </section>
           )}
 
-          <p className="mt-8 text-xs text-[#5E6A70]">
+          <p
+            data-anim="rise"
+            className="mt-8 text-xs text-[#5E6A70] will-change-transform"
+          >
             MindMeter is not a medical or diagnostic tool.
           </p>
         </div>
