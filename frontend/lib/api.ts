@@ -10,7 +10,8 @@ import { getAnonToken } from './anonToken';
 
 // Set in frontend/.env.local (local) and in the Vercel project settings (hosted).
 // Read inside a function so tests can change it; Next.js still inlines it at build time.
-const baseUrl = () => process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+// || not ??: an empty NEXT_PUBLIC_API_URL= line must fall back too, or the app calls itself.
+const baseUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 /** The server answered with an error (4xx/5xx). `code` comes from the contract's ApiErrorCode. */
 export class ApiError extends Error {

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { api } from "@/lib/api";
 import { offlineSupportResources } from "@/constant/offlineSupport";
+import { facultyOptions, readFaculty, saveFaculty } from "@/lib/faculty";
+import type { FacultyCode } from "../../../../shared/contract";
 
 type Resource = Awaited<ReturnType<typeof api.getResources>>[number];
 
@@ -14,6 +16,17 @@ export const Hero = () => {
   const [resourceSource, setResourceSource] = useState<"api" | "offline">(
     "api",
   );
+  // Kept in the browser only, never sent to the API (FR-04).
+  const [faculty, setFaculty] = useState<FacultyCode | null>(null);
+  // Read after mount so the server render and the first client render match.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setFaculty(readFaculty()), []);
+  const chooseFaculty = (value: string) => {
+    const next = facultyOptions.find((f) => f.value === value)?.value ?? null;
+    setFaculty(next);
+    saveFaculty(next);
+  };
+
   const crisisResources = resources.filter(
     (resource) => resource.support_group === "crisis",
   );
@@ -243,8 +256,9 @@ export const Hero = () => {
                 {
                   title: "Faculty services",
                   group: "faculty",
-                  empty:
-                    "Choose your faculty on the dashboard to see relevant faculty counselling services.",
+                  empty: faculty
+                    ? "Your faculty has no counselling service listed yet. The university services above are open to you."
+                    : "Choose your faculty to see its counselling service. Other faculties' services may only see their own students.",
                 },
                 {
                   title: "Clinics",
@@ -252,8 +266,11 @@ export const Hero = () => {
                   empty: "No clinic contacts are available yet.",
                 },
               ].map(({ title, group, empty }) => {
+                // A faculty service only takes its own students, so show only the student's own faculty.
                 const groupResources = resources.filter(
-                  (resource) => resource.support_group === group,
+                  (resource) =>
+                    resource.support_group === group &&
+                    (group !== "faculty" || resource.faculty === faculty),
                 );
 
                 return (
@@ -266,6 +283,23 @@ export const Hero = () => {
                     </summary>
 
                     <div className="mt-3 space-y-3">
+                      {group === "faculty" && (
+                        <label className="flex flex-col gap-2 text-sm font-medium text-ink sm:flex-row sm:items-center sm:gap-3">
+                          Your faculty (saved only on this device)
+                          <select
+                            value={faculty ?? ""}
+                            onChange={(e) => chooseFaculty(e.target.value)}
+                            className="min-h-11 rounded-btn border border-[#999999] bg-white px-3 text-sm font-normal text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="">Prefer not to say</option>
+                            {facultyOptions.map((f) => (
+                              <option key={f.value} value={f.value}>
+                                {f.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
                       {groupResources.length === 0 ? (
                         <p className="text-sm text-muted">{empty}</p>
                       ) : (
