@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import { SupportBar } from '@/components/UI/SupportBar';
 
 export const  Not_found =() => {
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-white font-sans">
 
-      <div className="absolute top-[-5%] left-[-5%] w-64 h-64 bg-[#EAF5F5] rounded-full opacity-80" />
+      <div className="absolute top-[-5%] left-[-5%] w-64 h-64 bg-tint rounded-full opacity-80" />
       <div className="absolute top-[10%] right-[10%] w-32 h-32 bg-[#D5C6E0] rounded-full opacity-80" />
       <div className="absolute bottom-[20%] left-[5%] w-36 h-36 bg-[#DF9D8D] rounded-full opacity-80" />
       <div className="absolute bottom-[-10%] right-[-5%] w-80 h-80 bg-[#E9DDB8] rounded-full opacity-80" />
@@ -26,37 +27,31 @@ export const  Not_found =() => {
           </svg>
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-serif font-semibold text-[#142B47] mb-4">
+        <h1 className="title-page text-ink mb-4">
           This page does not exist
         </h1>
-        <p className="text-[#4A5568] text-base md:text-lg mb-10">
+        <p className="text-muted text-base md:text-lg mb-10">
           The link may be old or typed wrong. Your check-ins are not affected.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-24">
           <Link 
-            href="/today" 
-            className="px-6 py-2.5 bg-[#3AA591] hover:bg-[#329280] text-white font-medium rounded-md transition-colors"
+            href="/checkin" 
+            className="inline-flex min-h-12 items-center rounded-btn bg-primary px-6 text-[19px] font-bold text-white transition-colors hover:bg-primary-hover"
           >
-            Go to today
+            Start today’s check-in
           </Link>
           <Link 
             href="/support" 
-            className="px-6 py-2.5 bg-[#F19F65] hover:bg-[#e08e54] text-[#142B47] font-medium rounded-md transition-colors"
+            className="inline-flex min-h-12 items-center rounded-btn bg-accent px-6 text-[19px] font-bold text-ink transition-colors hover:bg-accent-hover"
           >
-            See support
+            See support contacts
           </Link>
         </div>
 
-        <Link 
-          href="/talk"
-          className="flex items-center justify-center w-full max-w-3xl px-6 py-4 bg-[#CAB8DD] hover:bg-[#bba6d1] text-[#142B47] font-medium rounded-lg transition-colors group"
-        >
-          Need to talk to someone? 
-          <span className="ml-2 transform group-hover:translate-x-1 transition-transform">
-            →
-          </span>
-        </Link>
+        <div className="w-full max-w-[720px]">
+          <SupportBar />
+        </div>
       </div>
     </div>
   );

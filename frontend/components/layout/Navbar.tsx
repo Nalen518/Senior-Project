@@ -10,10 +10,10 @@ export const Navbar = () => {
   
   return (
     <nav className="fixed inset-x-0 top-0 z-50">
-      <div className="relative bg-[#2A9D90] px-7">
+      <div className="relative bg-primary px-7">
         <div className="flex items-center justify-between px-8 py-3">
           <div className="flex items-center space-x-8">
-            <span className="font-serif text-2xl font-bold tracking-wide text-white">
+            <span className="font-serif text-[26px] font-semibold text-white">
               MindMeter
             </span>
 
@@ -25,9 +25,9 @@ export const Navbar = () => {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`rounded-full px-5 py-1.5 text-sm font-bold transition-all ${
+                    className={`inline-flex min-h-11 items-center rounded-full px-4 text-[19px] font-bold transition-all ${
                       isActive
-                        ? "bg-white text-[#1E3A3A] shadow-sm"
+                        ? "bg-white text-ink shadow-sm"
                         : "text-white hover:bg-white/10"
                     }`}
                   >
@@ -42,7 +42,7 @@ export const Navbar = () => {
           <div>
             <Link
               href="/support"
-              className="rounded-xl bg-[#F6A15E] px-5.5 py-2 text-sm font-bold text-[#1E3A3A] shadow-sm transition-colors hover:bg-[#e09152]"
+              className="inline-flex min-h-11 items-center rounded-[10px] bg-accent px-6 text-[19px] font-bold text-ink shadow-sm transition-colors hover:bg-accent-hover"
             >
               Support
             </Link>

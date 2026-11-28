@@ -103,35 +103,35 @@ export const Hero = () => {
     <>
       <main
         ref={scope}
-        className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-[#1F3347] sm:px-6"
+        className="relative min-h-screen overflow-hidden bg-white px-4 pb-12 pt-24 text-ink sm:px-6"
       >
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full bg-[#E4A79A] will-change-transform"
+          className="pointer-events-none absolute -left-16 top-20 h-32 w-32 blob bg-[#E4A79A] opacity-60 will-change-transform"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute right-20 top-24 h-20 w-20 rounded-full bg-[#ECE1BE] will-change-transform"
+          className="pointer-events-none absolute right-20 top-24 h-20 w-20 blob bg-[#ECE1BE] opacity-60 will-change-transform"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -right-12 top-40 h-36 w-36 rounded-full bg-[#D3C1E5] will-change-transform"
+          className="pointer-events-none absolute -right-12 top-40 h-36 w-36 blob bg-support opacity-60 will-change-transform"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -left-10 bottom-24 h-36 w-36 rounded-full bg-[#ECE1BE] will-change-transform"
+          className="pointer-events-none absolute -left-10 bottom-24 h-36 w-36 blob bg-[#ECE1BE] opacity-60 will-change-transform"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -right-10 bottom-14 h-40 w-40 rounded-full bg-[#E3F2F1] will-change-transform"
+          className="pointer-events-none absolute -right-10 bottom-14 h-40 w-40 blob bg-tint opacity-60 will-change-transform"
         />
 
-        <div className="relative mx-auto max-w-3xl">
+        <div className="relative mx-auto max-w-[720px]">
           <header data-anim="title" className="mb-5 will-change-transform">
-            <h1 className="font-serif text-3xl font-bold sm:text-4xl">
+            <h1 className="title-page">
               Support at UGM
             </h1>
-            <p className="mt-1 text-sm text-[#3D4D59]">
+            <p className="mt-1 text-sm text-muted">
               Real people who can listen. MindMeter is for reflection and
               pointing you to help. It is not medical advice.
             </p>
@@ -140,39 +140,44 @@ export const Hero = () => {
           {resourceSource === "offline" && (
             <section
               data-anim="rise"
-              className="mb-5 rounded-xl border border-[#CFE3E4] bg-[#EAF4F4] px-5 py-4 text-[#1F3347] shadow-xs will-change-transform sm:px-6"
+              className="mb-6 rounded-2xl border border-line bg-tint p-6 text-ink will-change-transform"
               role="status"
             >
-              <h2 className="font-serif text-lg font-bold">You are offline.</h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-[#3D4D59]">
-                This emergency contact is built into the app so it always works.
-                The full list of UGM services loads when you are back online.
+              {/* The fallback also shows when the server fails, so only say offline when it is true. */}
+              <h2 className="title-section">
+                {navigator.onLine ? "Showing built-in contacts." : "You are offline."}
+              </h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                These emergency contacts are built into the app so they always work.
+                {navigator.onLine
+                  ? " The full list of UGM services could not load right now. Please try again in a moment."
+                  : " The full list of UGM services loads when you are back online."}
               </p>
             </section>
           )}
 
           <section
             data-anim="rise"
-            className="rounded-xl bg-[#C9AFD8] p-4 shadow-sm will-change-transform sm:p-5"
+            className="rounded-2xl bg-support p-6 will-change-transform"
           >
-            <h2 className="font-serif text-lg font-bold">
+            <h2 className="title-section">
               If you need help right now
             </h2>
-            <p className="mt-1 text-sm text-[#3D4D59]">
+            <p className="mt-1 text-sm text-ink">
               If you are in immediate danger, call local emergency services or
               go to the nearest hospital.
             </p>
 
             <div className="mt-3 space-y-2">
               {isLoading && (
-                <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
+                <p className="rounded-2xl bg-white px-5 py-5 text-sm text-muted">
                   Loading support contacts…
                 </p>
               )}
 
               {errorMessage && (
                 <p
-                  className="rounded-lg bg-white px-4 py-5 text-sm text-red-700"
+                  className="rounded-2xl bg-white px-5 py-5 text-sm text-red-700"
                   role="alert"
                 >
                   {errorMessage}
@@ -180,7 +185,7 @@ export const Hero = () => {
               )}
 
               {!isLoading && !errorMessage && crisisResources.length === 0 && (
-                <p className="rounded-lg bg-white px-4 py-5 text-sm text-[#3D4D59]">
+                <p className="rounded-2xl bg-white px-5 py-5 text-sm text-muted">
                   Support contacts will appear here once they have been
                   verified.
                 </p>
@@ -193,13 +198,13 @@ export const Hero = () => {
                 return (
                   <article
                     key={resource.id}
-                    className="flex flex-col gap-3 rounded-xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-2xl bg-white p-5 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <h3 className="font-serif text-base font-bold">
+                      <h3 className="title-section">
                         {resource.title}
                       </h3>
-                      <p className="mt-1 text-xs text-[#3D4D59]">
+                      <p className="mt-1 text-sm text-muted">
                         {resource.description}
                       </p>
                     </div>
@@ -208,7 +213,7 @@ export const Hero = () => {
                       href={resource.url}
                       target={isPhoneLink ? undefined : "_blank"}
                       rel={isPhoneLink ? undefined : "noreferrer"}
-                      className="shrink-0 rounded-lg bg-[#F6A15E] px-5 py-2 text-center text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-btn bg-accent px-5 py-2 text-center text-base font-bold text-ink transition-colors hover:bg-accent-hover"
                     >
                       {actionLabel}
                     </a>
@@ -219,12 +224,12 @@ export const Hero = () => {
           </section>
 
           {resourceSource !== "offline" && (
-            <section data-anim="rise" className="mt-5 will-change-transform">
-              <h2 className="font-serif text-lg font-bold">
+            <section data-anim="rise" className="mt-8 will-change-transform">
+              <h2 className="title-section">
                 Talk to a counsellor
               </h2>
 
-              <p className="mt-1 text-sm text-[#3D4D59]">
+              <p className="mt-1 text-sm text-muted">
                 Find a counselling service that feels right for you.
               </p>
 
@@ -254,15 +259,15 @@ export const Hero = () => {
                 return (
                   <details
                     key={group}
-                    className="mt-3 border-b border-[#B8C0C3] py-3"
+                    className="mt-3 border-b border-line py-3"
                   >
-                    <summary className="cursor-pointer font-serif font-bold">
+                    <summary className="title-section flex min-h-11 cursor-pointer items-center">
                       {title}
                     </summary>
 
                     <div className="mt-3 space-y-3">
                       {groupResources.length === 0 ? (
-                        <p className="text-sm text-[#3D4D59]">{empty}</p>
+                        <p className="text-sm text-muted">{empty}</p>
                       ) : (
                         groupResources.map((resource) => {
                           const isPhoneLink = resource.url.startsWith("tel:");
@@ -270,14 +275,14 @@ export const Hero = () => {
                           return (
                             <article
                               key={resource.id}
-                              className="flex flex-col gap-3 rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4 sm:flex-row sm:items-center sm:justify-between"
+                              className="flex flex-col gap-3 rounded-2xl border border-line bg-tint p-6 sm:flex-row sm:items-center sm:justify-between"
                             >
                               <div>
-                                <h3 className="font-serif font-bold">
+                                <h3 className="title-section">
                                   {resource.title}
                                 </h3>
 
-                                <p className="mt-1 text-sm text-[#3D4D59]">
+                                <p className="mt-1 text-sm text-muted">
                                   {resource.description}
                                 </p>
                               </div>
@@ -286,7 +291,7 @@ export const Hero = () => {
                                 href={resource.url}
                                 target={isPhoneLink ? undefined : "_blank"}
                                 rel={isPhoneLink ? undefined : "noreferrer"}
-                                className="shrink-0 rounded-lg bg-[#F6A15E] px-5 py-2 text-center text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-btn bg-accent px-5 py-2 text-center text-base font-bold text-ink transition-colors hover:bg-accent-hover"
                               >
                                 {isPhoneLink ? "Call" : "Open"}
                               </a>
@@ -303,7 +308,7 @@ export const Hero = () => {
 
           <p
             data-anim="rise"
-            className="mt-8 text-xs text-[#5E6A70] will-change-transform"
+            className="mt-8 text-xs text-muted will-change-transform"
           >
             MindMeter is not a medical or diagnostic tool.
           </p>

@@ -2,13 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { SupportBar } from "@/components/UI/SupportBar";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { api } from "@/lib/api";
+import { api, describeError } from "@/lib/api";
 import { flushQueue, readQueue } from "@/lib/syncQueue";
 import type { SyncItem } from "../../../../shared/contract";
 import { MoodFace } from "@/components/UI/MoodFace";
-import type { FacultyCode } from "../../../../shared/contract";
+import type { FacultyCode, ThemeCode } from "../../../../shared/contract";
+
+// Readable chip text for the fixed theme vocabulary. Typed so a new code in the contract needs a label.
+const themeLabels: Record<ThemeCode, string> = {
+  sleep: "Sleep",
+  workload: "Workload",
+  exams: "Exams",
+  isolation: "Feeling alone",
+  relationships: "Relationships",
+  finance: "Money",
+  health: "Health",
+  motivation: "Motivation",
+};
 import {
   facultyOptions,
   filterBookingOptions,
@@ -21,11 +34,11 @@ type Checkin = Awaited<ReturnType<typeof api.listCheckins>>[number];
 type Insight = Awaited<ReturnType<typeof api.getInsights>>;
 
 const moodDetails = {
-  1: { label: "Very low", color: "#D96B5B" },
-  2: { label: "Low", color: "#E7975B" },
-  3: { label: "Okay", color: "#D8D4A2" },
-  4: { label: "Good", color: "#67AB83" },
-  5: { label: "Very good", color: "#2EB812" },
+  1: { label: "Very low", color: "#E07A5F" },
+  2: { label: "Low", color: "#F4A462" },
+  3: { label: "Okay", color: "#E9D8A6" },
+  4: { label: "Good", color: "#70B77E" },
+  5: { label: "Very good", color: "#38B000" },
 } as const;
 
 function getMoodDetails(mood: number) {
@@ -191,10 +204,10 @@ export const Hero = () => {
       );
 
       setShowTodayReminder(!hasSavedCheckinToday && !hasQueuedCheckinToday);
-    } catch {
+    } catch (err) {
       setErrorMessage(
         navigator.onLine
-          ? "We could not load your weekly overview. Please try again shortly."
+          ? describeError(err, "We could not load your weekly overview. Please try again shortly.")
           : "Your saved dashboard history and insights need a connection to load. Any pending check-ins are listed below and will sync when you reconnect.",
       );
     } finally {
@@ -346,31 +359,31 @@ export const Hero = () => {
     <>
       <main
         ref={scope}
-        className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-[#1F3347] sm:px-6"
+        className="relative min-h-screen overflow-hidden bg-white px-4 pb-10 pt-24 text-ink sm:px-6"
       >
         {showTodayReminder && (
           <div className="fixed inset-0 z-[45] flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
             <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
-              <h2 className="font-serif text-2xl font-bold text-[#1F3347]">
+              <h2 className="title-section text-ink">
                 You have not checked in today
               </h2>
 
-              <p className="mt-2 text-sm text-[#3D4D59]">
+              <p className="mt-2 text-sm text-muted">
                 Take a moment to record how you are feeling today.
               </p>
 
               <div className="mt-6 flex flex-col gap-3">
                 <Link
-                  href="/"
-                  className="w-full rounded-xl bg-[#2A9D90] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#238479]"
+                  href="/checkin"
+                  className="flex min-h-12 w-full items-center justify-center rounded-btn bg-primary px-6 text-[19px] font-bold text-white transition-colors hover:bg-primary-hover"
                 >
-                  Go to today&apos;s check-in
+                  Start today’s check-in
                 </Link>
 
                 <button
                   type="button"
                   onClick={() => setShowTodayReminder(false)}
-                  className="w-full rounded-xl border border-gray-300 bg-white py-3 text-sm font-semibold text-[#1F3347] transition-colors hover:bg-gray-50"
+                  className="flex min-h-12 w-full items-center justify-center rounded-btn border border-line bg-white px-6 text-base font-bold text-ink transition-colors hover:bg-tint"
                 >
                   Stay on dashboard
                 </button>
@@ -381,31 +394,31 @@ export const Hero = () => {
 
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -left-12 top-16 h-28 w-28 rounded-full bg-[#E4A79A]"
+          className="pointer-events-none absolute -left-12 top-16 h-28 w-28 blob opacity-60 bg-[#E4A79A]"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 rounded-full bg-[#ECE1BE]"
+          className="pointer-events-none absolute right-[28%] top-20 h-20 w-20 blob opacity-60 bg-[#ECE1BE]"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -right-10 top-36 h-32 w-32 rounded-full bg-[#D3C1E5]"
+          className="pointer-events-none absolute -right-10 top-36 h-32 w-32 blob opacity-60 bg-support"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -left-10 bottom-64 h-28 w-36 rounded-full bg-[#D3C1E5]"
+          className="pointer-events-none absolute -left-10 bottom-64 h-28 w-36 blob opacity-60 bg-support"
         />
         <div
           data-anim="circle"
-          className="pointer-events-none absolute -right-10 bottom-24 h-28 w-28 rounded-full bg-[#E3F2F1]"
+          className="pointer-events-none absolute -right-10 bottom-24 h-28 w-28 rounded-full bg-tint"
         />
 
-        <div className="relative mx-auto max-w-5xl">
+        <div className="relative mx-auto max-w-[1200px]">
           <header data-anim="title">
-            <h1 className="font-serif text-3xl font-bold sm:text-4xl">
+            <h1 className="title-page">
               Your wellbeing overview
             </h1>
-            <p className="mt-1 text-sm text-[#3D4D59]">
+            <p className="mt-1 text-sm text-muted">
               Your recent check-ins and gentle reflections.
             </p>
           </header>
@@ -413,19 +426,19 @@ export const Hero = () => {
           {hasNoCheckins && (
             <section
               data-anim="rise"
-              className="mt-5 rounded-xl border border-[#C9DCDD] bg-[#E3F2F1] p-5"
+              className="mt-6 rounded-2xl border border-line bg-tint p-6"
             >
-              <h2 className="font-serif text-lg font-bold">No check-in yet</h2>
+              <h2 className="title-section">No check-in yet</h2>
 
-              <p className="mt-1 text-sm text-[#3D4D59]">
+              <p className="mt-1 text-sm text-muted">
                 Please check in to start building your personal mood overview.
               </p>
 
               <Link
-                href="/"
-                className="mt-4 inline-flex rounded-lg bg-[#2A9D90] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#238479]"
+                href="/checkin"
+                className="mt-4 inline-flex min-h-12 items-center rounded-btn bg-primary px-6 text-[19px] font-bold text-white transition-colors hover:bg-primary-hover"
               >
-                Go to today’s check-in
+                Start today’s check-in
               </Link>
             </section>
           )}
@@ -433,20 +446,20 @@ export const Hero = () => {
           {queuedCount > 0 && (
             <section
               data-anim="rise"
-              className="mt-5 flex flex-col gap-3 rounded-lg border border-[#C9DCDD] bg-[#E3F2F1] p-3 sm:flex-row sm:items-center sm:justify-between"
+              className="mt-5 flex flex-col gap-3 rounded-2xl border border-line bg-tint p-6 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
                 <p className="text-sm font-bold">
                   Your check-in is safe on this device.
                 </p>
-                <p className="text-xs text-[#3D4D59]">
+                <p className="text-xs text-muted">
                   {queuedCount} check-in{queuedCount > 1 ? "s" : ""} will sync
                   when the connection is back.
                 </p>
               </div>
 
               {queuedItems.length > 0 && (
-                <ul className="text-xs text-[#3D4D59]">
+                <ul className="text-xs text-muted">
                   {queuedItems.map((item) => (
                     <li key={item.client_ts}>
                       Pending · {formatDate(item.client_ts)} ·{" "}
@@ -460,7 +473,7 @@ export const Hero = () => {
                 type="button"
                 onClick={handleRetrySync}
                 disabled={isRetrying}
-                className="rounded-lg border border-[#9FB7B9] bg-white px-4 py-2 text-sm font-bold disabled:opacity-60"
+                className="rounded-btn border border-[#9FB7B9] bg-white px-4 py-2 text-sm font-bold disabled:opacity-60"
               >
                 {isRetrying ? "Trying…" : "Try again now"}
               </button>
@@ -470,14 +483,14 @@ export const Hero = () => {
           {errorMessage && (
             <p
               data-anim="rise"
-              className="mt-5 rounded-lg bg-red-50 p-4 text-sm text-red-700"
+              className="mt-5 rounded-2xl bg-red-50 p-6 text-sm text-red-700"
             >
               {errorMessage}
             </p>
           )}
 
           {isLoading ? (
-            <p className="mt-8 text-sm text-[#3D4D59]">
+            <p className="mt-8 text-sm text-muted">
               Loading your overview…
             </p>
           ) : (
@@ -486,21 +499,20 @@ export const Hero = () => {
                 data-anim="rise"
                 className="mt-5 grid gap-4 lg:grid-cols-[1.7fr_0.95fr]"
               >
-                <article className="rounded-xl bg-[#E3F2F1] p-4">
+                <article className="rounded-2xl border border-line bg-tint p-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h2 className="font-serif text-lg font-bold">
-                        Mood, recent check-ins
+                      <h2 className="title-section">
+                        Mood, last {selectedRange} days
                       </h2>
-                      <p className="mt-1 text-xs text-[#3D4D59]">
+                      <p className="mt-1 text-sm text-muted">
                         {chartCheckins.length} check-in
-                        {chartCheckins.length !== 1 ? "s" : ""} in the last{" "}
-                        {selectedRange} days
+                        {chartCheckins.length !== 1 ? "s" : ""}
                       </p>
                     </div>
 
                     <div
-                      className="inline-flex rounded-lg border border-[#9FB7B9] bg-white p-1"
+                      className="inline-flex rounded-full border border-line bg-white p-1"
                       role="group"
                       aria-label="Choose chart period"
                     >
@@ -509,10 +521,10 @@ export const Hero = () => {
                           key={range}
                           type="button"
                           onClick={() => setSelectedRange(range as 7 | 30)}
-                          className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
+                          className={`min-h-11 rounded-full px-4 text-sm font-bold transition-colors ${
                             selectedRange === range
-                              ? "bg-[#1F405D] text-white"
-                              : "text-[#1F405D] hover:bg-[#E3F2F1]"
+                              ? "bg-ink text-white"
+                              : "text-ink hover:bg-tint"
                           }`}
                         >
                           {range} days
@@ -523,13 +535,13 @@ export const Hero = () => {
 
                   {errorMessage ? (
                     <div className="flex h-44 items-center justify-center px-4">
-                      <p className="text-center text-sm text-[#3D4D59]">
-                        {errorMessage}
+                      <p className="text-center text-sm text-muted">
+                        Your mood chart will show here once it loads.
                       </p>
                     </div>
                   ) : chartCheckins.length === 0 ? (
                     <div className="flex h-44 items-center justify-center">
-                      <p className="text-center text-sm text-[#3D4D59]">
+                      <p className="text-center text-sm text-muted">
                         No check-ins in this period. Please check in to start
                         your mood overview.
                       </p>
@@ -572,7 +584,7 @@ export const Hero = () => {
                                 y={y - 12}
                                 width="24"
                                 height="24"
-                                className="text-[#1F3347]"
+                                className="text-ink"
                               />
                             </g>
                           );
@@ -605,7 +617,7 @@ export const Hero = () => {
                               cx={point.x}
                               cy={point.y}
                               r="5"
-                              fill="#1F405D"
+                              fill="#163250"
                             />
                           );
                         })}
@@ -632,21 +644,22 @@ export const Hero = () => {
                 </article>
 
                 {(hasEnoughInsightData || Boolean(errorMessage)) && (
-                  <article className="rounded-xl bg-[#1F405D] p-4 text-white">
-                    <p className="text-[10px] font-bold tracking-wider text-[#C9DCDD]">
-                      INSIGHT · RECENT CHECK-INS
+                  <article className="rounded-2xl bg-ink p-6 text-white">
+                    <p className="font-mono text-xs tracking-wider text-[#C9DCDD]">
+                      INSIGHT · LAST 7 DAYS
                     </p>
 
                     <p className="mt-4 font-serif text-lg leading-relaxed">
-                      {errorMessage ||
-                        (insight?.message ??
+                      {errorMessage
+                        ? "Your insight will show here once it loads."
+                        : (insight?.message ??
                           "Check in a few more days to see your mood pattern.")}
                     </p>
 
                     {!errorMessage && (
                       <>
-                        <p className="mt-5 text-[10px] font-bold tracking-wider text-[#C9DCDD]">
-                          THEMES
+                        <p className="mt-5 font-mono text-xs tracking-wider text-[#C9DCDD]">
+                          THEMES · LAST 14 DAYS
                         </p>
 
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -654,9 +667,9 @@ export const Hero = () => {
                             insight.themes.map((theme) => (
                               <span
                                 key={theme}
-                                className="rounded-full bg-[#C9DCDD] px-3 py-1 text-xs font-bold text-[#1F405D]"
+                                className="rounded-full bg-[#C9DCDD] px-3 py-1 text-xs font-bold text-ink"
                               >
-                                {theme}
+                                {themeLabels[theme] ?? theme}
                               </span>
                             ))
                           ) : (
@@ -679,7 +692,7 @@ export const Hero = () => {
 
               {hasEnoughInsightData && insight?.resources.length ? (
                 <section data-anim="rise" className="mt-6">
-                  <h2 className="font-serif text-lg font-bold">
+                  <h2 className="title-section">
                     Suggested resources
                   </h2>
 
@@ -687,12 +700,12 @@ export const Hero = () => {
                     {insight.resources.map((resource) => (
                       <article
                         key={resource.id}
-                        className="rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4"
+                        className="rounded-2xl border border-line bg-tint p-6"
                       >
-                        <h3 className="font-serif font-bold">
+                        <h3 className="title-section">
                           {resource.title}
                         </h3>
-                        <p className="mt-2 text-xs text-[#3D4D59]">
+                        <p className="mt-2 text-sm text-body">
                           {resource.description}
                         </p>
                         <a
@@ -707,9 +720,9 @@ export const Hero = () => {
                               ? undefined
                               : "noreferrer"
                           }
-                          className="mt-4 inline-flex text-xs font-bold underline"
+                          className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-ink hover:underline"
                         >
-                          {resourceAction(resource.url)} →
+                          {resourceAction(resource.url)} <span aria-hidden="true">→</span>
                         </a>
                       </article>
                     ))}
@@ -721,17 +734,17 @@ export const Hero = () => {
                 <section data-anim="rise" className="mt-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-baseline gap-2">
-                      <h2 className="font-serif text-lg font-bold">
+                      <h2 className="title-section">
                         Check-in history
                       </h2>
 
-                      <span className="text-xs text-[#5E6A70]">
+                      <span className="text-xs text-muted">
                         {historyCheckins.length} check-in
                         {historyCheckins.length !== 1 ? "s" : ""} · Newest first
                       </span>
                     </div>
 
-                    <label className="flex items-center gap-2 text-xs font-semibold text-[#3D4D59]">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-muted">
                       Show
                       <select
                         value={historyPageSize}
@@ -740,7 +753,7 @@ export const Hero = () => {
                             Number(event.target.value) as 7 | 10 | 15 | 31,
                           )
                         }
-                        className="rounded-md border border-[#9FB7B9] bg-white px-2 py-1 text-xs font-bold text-[#1F405D] outline-none focus:ring-2 focus:ring-[#2A9D90]"
+                        className="rounded-md border border-[#9FB7B9] bg-white px-2 py-1 text-xs font-bold text-ink outline-none focus:ring-2 focus:ring-primary"
                         aria-label="Check-ins shown per page"
                       >
                         <option value={7}>7</option>
@@ -752,9 +765,9 @@ export const Hero = () => {
                     </label>
                   </div>
 
-                  <div className="mt-3 overflow-hidden rounded-xl border border-[#D9E0E2] bg-white">
+                  <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-white">
                     {visibleCheckins.length === 0 ? (
-                      <p className="p-4 text-sm text-[#3D4D59]">
+                      <p className="p-4 text-sm text-muted">
                         No check-ins yet. Visit Today to make your first one.
                       </p>
                     ) : (
@@ -774,13 +787,13 @@ export const Hero = () => {
                             >
                               <MoodFace
                                 mood={checkin.mood_value}
-                                className="h-5 w-5 text-[#1F3347]"
+                                className="h-5 w-5 text-ink"
                               />
                             </span>
 
                             <span>{mood.label}</span>
 
-                            <span className="text-[#3D4D59]">
+                            <span className="text-muted">
                               {checkin.note_text || "No note"}
                             </span>
                           </article>
@@ -798,7 +811,7 @@ export const Hero = () => {
                             setHistoryPage((page) => Math.max(1, page - 1))
                           }
                           disabled={currentHistoryPage === 1}
-                          className="rounded-md px-3 py-1.5 text-xs font-bold text-[#1F405D] disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-md px-3 py-1.5 text-xs font-bold text-ink disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           Previous
                         </button>
@@ -807,7 +820,7 @@ export const Hero = () => {
                           item === "ellipsis" ? (
                             <span
                               key={`ellipsis-${index}`}
-                              className="px-2 text-xs text-[#5E6A70]"
+                              className="px-2 text-xs text-muted"
                             >
                               …
                             </span>
@@ -819,10 +832,10 @@ export const Hero = () => {
                               aria-current={
                                 item === currentHistoryPage ? "page" : undefined
                               }
-                              className={`h-8 min-w-8 rounded-md px-2 text-xs font-bold transition-colors ${
+                              className={`h-8 min-w-8 rounded-btn px-2 text-xs font-bold transition-colors ${
                                 item === currentHistoryPage
-                                  ? "bg-[#1F405D] text-white"
-                                  : "text-[#1F405D] hover:bg-[#E3F2F1]"
+                                  ? "bg-ink text-white"
+                                  : "text-ink hover:bg-tint"
                               }`}
                             >
                               {item}
@@ -838,7 +851,7 @@ export const Hero = () => {
                             )
                           }
                           disabled={currentHistoryPage === totalHistoryPages}
-                          className="rounded-md px-3 py-1.5 text-xs font-bold text-[#1F405D] disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-md px-3 py-1.5 text-xs font-bold text-ink disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           Next
                         </button>
@@ -850,14 +863,9 @@ export const Hero = () => {
             </>
           )}
 
-          <Link
-            href="/support"
-            data-anim="rise"
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C9AFD8] px-5 py-3 text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#B99BCB]"
-          >
-            Need to talk to someone?
-            <span aria-hidden="true">&rarr;</span>
-          </Link>
+          <div data-anim="rise" className="mt-8">
+            <SupportBar />
+          </div>
         </div>
       </main>
     </>
