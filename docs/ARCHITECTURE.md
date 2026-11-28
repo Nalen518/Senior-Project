@@ -32,8 +32,8 @@ flowchart LR
 |------|------------|--------|
 | Frontend | Next.js + TypeScript | In `frontend/`, not deployed yet |
 | API | Node.js + Express (JavaScript) | In `backend/`, not deployed yet |
-| Database | Supabase PostgreSQL | Created, schema and safety data loaded |
-| LLM | OpenRouter | Code ready, off until a key and model are set |
+| Database | Supabase PostgreSQL | Created, schema, safety data and demo account loaded |
+| LLM | OpenRouter, `openai/gpt-5.6-luna` | Tested from a local backend (28 Nov 2026) |
 
 The browser only ever talks to the API. It never connects to the database and never holds the OpenRouter key. The types shared by both sides are in [`shared/contract.ts`](../shared/contract.ts), and the integration tests check every API response against them.
 
@@ -145,7 +145,27 @@ The API returns the help card. The dashboard does not show it yet.
 | Works with the LLM switched off | failure drill in `api.test.js` |
 | Help card rules | `tests/unit/helpRules.test.js` |
 
-`npm run eval:nlp` runs the real model on 20 invented notes (10 English, 10 Indonesian) and reports accuracy and latency. It has not been run yet because no model is configured.
+### 3.7 Model evaluation (28 November 2026)
+`npm run eval:nlp` runs the production code against the real model on the 20 invented notes in `backend/data/eval-notes.json`. Model: `openai/gpt-5.6-luna`.
+
+| Notes | Count | Failed | Sentiment correct | Theme recall | Theme precision | Median ms | Max ms |
+|-------|-------|--------|-------------------|--------------|-----------------|-----------|--------|
+| All | 20 | 0 | 100% | 88% | 96% | 1411 | 3008 |
+| English | 10 | 0 | 100% | 85% | 92% | 1311 | 2527 |
+| Indonesian | 10 | 0 | 100% | 92% | 100% | 2588 | 3008 |
+
+Recall is the share of expected themes the model found. Precision is the share of its themes that were expected. The misses: "health" was not tagged for a note about a walk (English and Indonesian), "workload" was not tagged for a note about being alone in a group project, and "motivation" was added to a note about lack of sleep.
+
+Limits: 20 short invented notes written by the team, one run, one model. This shows the pipeline works. It is not a measure of accuracy on real student notes. The model runs after the response, so its latency does not slow a check-in.
+
+### 3.8 Live checks (28 November 2026)
+Run from a local backend against Supabase with invented notes. Test users were deleted afterwards.
+
+- A normal note produced the themes exams and sleep, and a help card
+- A crisis note was flagged, returned no insight and was never analysed
+- With the key removed, check-in and insights still worked and nothing was analysed (AT-05)
+- A request without a token returned `401`
+- Server logs contained no note text or token (AT-09)
 
 ## 4. Database (ERD)
 
