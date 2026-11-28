@@ -243,6 +243,29 @@ describe('MindMeter API', { skip }, () => {
     assert.deepEqual(rows, []);
   });
 
+  test('upgrade.sql fixes a database made before support_group, keeps RLS, and can run twice', async () => {
+    await pool.query('ALTER TABLE resources DROP COLUMN support_group; DROP TYPE support_group;');
+    const get = (route) => fetch(`${base}${route}`, { headers: { 'X-Anon-Token': TOKEN } });
+    assert.equal((await get('/api/resources')).status, 500); // the bug this fixes
+
+    const upgrade = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'models', 'upgrade.sql'), 'utf8');
+    await pool.query(upgrade);
+    // a database that still has the old silent default loses it on the next run
+    await pool.query("ALTER TABLE resources ALTER COLUMN support_group SET DEFAULT 'self_help'");
+    await pool.query(upgrade);
+    await assert.rejects(
+      pool.query("INSERT INTO resources (title, description, url, type) VALUES ('no group', 'x', 'https://example.org', 'self_help')"),
+      { code: '23502' },
+    );
+
+    const { rows } = await pool.query('SELECT type::text, faculty IS NOT NULL AS own, support_group::text AS grp FROM resources ORDER BY sort_order');
+    assert.deepEqual(rows.map((r) => r.grp), ['crisis', 'self_help', 'university', 'faculty']);
+    const { rows: rls } = await pool.query("SELECT relrowsecurity FROM pg_class WHERE oid = 'public.resources'::regclass");
+    assert.equal(rls[0].relrowsecurity, true);
+    assert.equal((await get('/api/resources')).status, 200);
+    assert.equal((await get('/api/insights')).status, 200);
+  });
+
   // Rule 4 of the development plan: the backend (JavaScript) must match shared/contract.ts exactly.
   // Every response recorded above is written into a .ts file as `<json> satisfies <ContractType>`
   // and compiled. A missing, renamed, extra or wrongly-typed field fails this test (and CI).

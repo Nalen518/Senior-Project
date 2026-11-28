@@ -1,6 +1,7 @@
 'use strict';
 
-// Creates all tables from src/models/schema.sql. Safe to run twice: it skips if the tables exist.
+// New database: creates all tables from src/models/schema.sql.
+// Existing database: applies src/models/upgrade.sql, which is safe to run any number of times.
 // Usage: npm run db:migrate
 
 const fs = require('node:fs');
@@ -17,15 +18,12 @@ async function main() {
   const client = await pool.connect(); // one connection, so BEGIN/COMMIT cover every query
   try {
     const { rows } = await client.query("SELECT to_regclass('public.users') AS existing");
-    if (rows[0].existing) {
-      console.log('Schema already exists: nothing to do.');
-      return;
-    }
-    const sql = fs.readFileSync(path.join(__dirname, '..', 'src', 'models', 'schema.sql'), 'utf8');
+    const exists = Boolean(rows[0].existing);
+    const sql = fs.readFileSync(path.join(__dirname, '..', 'src', 'models', exists ? 'upgrade.sql' : 'schema.sql'), 'utf8');
     await client.query('BEGIN');
     await client.query(sql);
     await client.query('COMMIT');
-    console.log('Schema created.');
+    console.log(exists ? 'Schema up to date. If resources changed, run npm run db:seed-safety.' : 'Schema created.');
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     throw err;
