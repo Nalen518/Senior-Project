@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { flushQueue, readQueue } from "@/lib/syncQueue";
 import type { SyncItem } from "../../../../shared/contract";
 import { MoodFace } from "@/components/UI/MoodFace";
+import { HelpCard } from "./HelpCard";
 
 type Checkin = Awaited<ReturnType<typeof api.listCheckins>>[number];
 type Insight = Awaited<ReturnType<typeof api.getInsights>>;
@@ -500,6 +501,8 @@ export const Hero = () => {
                   </div>
                 </article>
               </section>
+
+              {insight?.help ? <HelpCard help={insight.help} /> : null}
 
               {insight?.resources.length ? (
                 <section className="mt-6">

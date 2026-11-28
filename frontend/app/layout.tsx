@@ -30,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <WelcomeGate />
+        <OfflineExperience />
         {children}
       </body>
     </html>
