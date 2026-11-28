@@ -6,3 +6,9 @@ is not a diagnostic or medical tool.
 Group Leader: Arya Raditya Ardana - 536660 
 Member 1: Nalen Raditya Sadewa - 536801
 Member 2: Christania Putri Rachmadewi - 532874
+
+## Documentation
+
+- [Architecture, ERD and AI pipeline](docs/ARCHITECTURE.md)
+- [Requirements (SRD)](docs/SRD.md)
+- [API contract](docs/API-CONTRACT.md)

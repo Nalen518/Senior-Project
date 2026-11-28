@@ -13,6 +13,7 @@ import {
   readFaculty,
   saveFaculty,
 } from "@/lib/faculty";
+import { HelpCard } from "./HelpCard";
 
 type Checkin = Awaited<ReturnType<typeof api.listCheckins>>[number];
 type Insight = Awaited<ReturnType<typeof api.getInsights>>;
@@ -584,7 +585,7 @@ export const Hero = () => {
                   </article>
                 )}
               </section>
-
+              {insight?.help ? <HelpCard help={insight.help} /> : null}
               {hasEnoughInsightData && insight?.resources.length ? (
                 <section className="mt-6">
                   <h2 className="font-serif text-lg font-bold">

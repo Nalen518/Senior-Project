@@ -1,6 +1,6 @@
 # MindMeter — Backend
 
-Azure-hosted REST API, rule-based AI logic, and database layer for MindMeter.
+REST API, rule-based AI logic, and database layer for MindMeter. Hosted on Railway with a Supabase database. System diagram, ERD and AI pipeline: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 Node.js + Express + PostgreSQL. The frontend only ever talks to this API, never to the database.
 
 ## Folder structure
@@ -12,7 +12,7 @@ Node.js + Express + PostgreSQL. The frontend only ever talks to this API, never 
 | `src/api/` | Route handlers for the 5 contract endpoints + request validation |
 | `src/logic/` | Pure rules, no database: crisis keyword check, rule-based trend (Stage 1 AI), WIB dates |
 | `src/services/` | Orchestration: check-in flow, insights, crisis keyword cache, OpenRouter NLP (Stage 2) |
-| `src/models/` | All SQL lives here. `schema.sql` is the PostgreSQL schema (see `docs/image/ERD.png`) |
+| `src/models/` | All SQL lives here. `schema.sql` is the PostgreSQL schema (ERD in `docs/ARCHITECTURE.md`) |
 | `src/middleware/` | Anonymous-token identification and the shared error format |
 | `src/config/`, `src/db/` | Environment settings and the PostgreSQL connection pool |
 | `scripts/` | `migrate.js` (create tables), `seed-demo.js` (demo account with 4 weeks of history) |
@@ -29,8 +29,8 @@ contract drift apart, CI fails. Changing an endpoint = one PR that changes `cont
 | POST | `/api/checkins` | `{ mood_value 1-5, note_text?, client_ts? }` | `{ id, saved, insight?, crisis_flag }` |
 | POST | `/api/checkins/sync` | `[{ mood_value, note_text?, client_ts }]` (max 50) | `[{ client_ts, id, saved, crisis_flag }]` |
 | GET  | `/api/checkins` | — | `[{ id, mood_value, note_text, created_at }]` |
-| GET  | `/api/insights` | — | `{ trend, message, themes[], resources[] }` |
-| GET  | `/api/resources` | — | `[{ id, title, description, url, tags }]` |
+| GET  | `/api/insights` | — | `{ trend, message, themes[], resources[], help }` |
+| GET  | `/api/resources` | — | `[{ id, title, description, url, tags, faculty }]` |
 
 Implementation details the frontend must know (agree these as a team):
 
@@ -44,7 +44,7 @@ Implementation details the frontend must know (agree these as a team):
   the newer tap wins. `saved: true` means the item can be removed from the queue.
 - **Phone-only contacts** are returned as `tel:` links in `url`.
 - **Errors** always look like `{ "error": { "code", "message" } }` with a 4xx/5xx status.
-- **`GET /health`** is for Azure's health check, not for the frontend.
+- **`GET /health`** is for the host's health check, not for the frontend.
 
 ## Crisis rule
 
@@ -84,8 +84,8 @@ No training data required.
 ## Tech stack
 
 - **Runtime:** Node.js 22 + Express 5
-- **Database:** Azure Database for PostgreSQL — create tables with `npm run db:migrate`
-- **Hosting:** Azure App Service (Node 22 LTS runtime)
+- **Database:** Supabase PostgreSQL. Create the tables with `npm run db:migrate`
+- **Hosting:** Railway (Node 22 or newer)
 - **NLP (Stage 2):** OpenRouter LLM, called from the backend only
 - **Tests / lint:** built-in `node:test`, ESLint
 
@@ -104,7 +104,7 @@ npm run dev                   # http://localhost:3000, restarts on file changes
 Demo account for the presentation (so the dashboard is never empty):
 
 ```bash
-# set DEMO_ANON_TOKEN in .env, then:
+# set DEMO_ANON_TOKEN in .env (with the OpenRouter key and model set, the demo also gets themes), then:
 npm run db:seed-demo
 # in the browser console on the frontend: localStorage.setItem('<token key>', '<DEMO_ANON_TOKEN>')
 ```
@@ -124,7 +124,12 @@ contains `test`.
 
 ## Deployment
 
-Deployed to the department **Microsoft Azure** account via the `deploy-azure` job in `.github/workflows/ci.yml`
-(fires only on push to `main`, requires the `AZURE_CREDENTIALS` repo secret). On App Service, set the
-variables from `.env.example` as Application Settings, with `DB_SSL=true` and `CORS_ORIGIN` set to the
-frontend's URL.
+Not deployed yet. Planned setup:
+
+- **Database (Supabase):** run `npm run db:migrate` and `npm run db:seed-safety`. Row level security is enabled by the schema.
+- **API (Railway):** root directory `backend`, start command `npm start`, deploy from `Development`. Set `NODE_ENV=production`,
+  `DATABASE_URL` (Supabase session pooler string), `DB_SSL_CA` (Supabase CA certificate on one line with `\n`),
+  `TRUST_PROXY=1`, `CORS_ORIGIN` (the frontend URL), and optionally `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `DEMO_ANON_TOKEN`.
+- **Frontend (Vercel):** root directory `frontend`, set `NEXT_PUBLIC_API_URL` to the Railway URL.
+
+CI (`.github/workflows/ci.yml`) only tests. Railway and Vercel deploy through their own GitHub integrations.

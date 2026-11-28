@@ -30,7 +30,13 @@ function buildMessages(note, themeCodes) {
 function parseModelReply(text, allowedThemes) {
   const match = String(text).match(/\{[\s\S]*\}/);
   if (!match) throw new Error('model reply contained no JSON object');
-  const data = JSON.parse(match[0]);
+  let data;
+  try {
+    data = JSON.parse(match[0]);
+  } catch {
+    // The parser's own message quotes the reply, which could repeat the note, and errors are logged and stored.
+    throw new Error('model reply was not valid JSON');
+  }
 
   if (!SENTIMENTS.includes(data.sentiment)) throw new Error('model reply has an invalid sentiment');
   let score = Number(data.score);
@@ -61,6 +67,9 @@ function createNlpService({ config, models, logger = console, fetchImpl = global
         temperature: 0,
         max_tokens: 120,
         response_format: { type: 'json_object' },
+        // NFR-04: only route to providers that do not collect or keep the note (zero data retention).
+        // If none is available the request fails and the analysis is marked failed.
+        provider: { data_collection: 'deny', zdr: true },
       }),
       signal: AbortSignal.timeout(timeoutMs),
     });

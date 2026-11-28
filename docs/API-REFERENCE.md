@@ -150,4 +150,4 @@ Codes: `VALIDATION_ERROR` 400, `INVALID_JSON` 400, `ANON_TOKEN_REQUIRED` 401, `N
 
 ## Health check (not for the frontend)
 
-`GET /health` → 200, used by Azure App Service.
+`GET /health` → 200, used as the Railway health check.

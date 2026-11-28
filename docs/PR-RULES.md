@@ -118,7 +118,7 @@ The contract (`docs/API-CONTRACT.md`, `shared/contract.ts`) is frozen at v1.0. T
 
 ## 9. Safety & security rules (non-negotiable)
 
-- **Never commit** `.env`, API keys (OpenRouter), DB connection strings, tokens. Use `.env.example` with fake values; real values live in Azure App Service settings (and GitHub Actions secrets for CI).
+- **Never commit** `.env`, API keys (OpenRouter), DB connection strings, tokens. Use `.env.example` with fake values; real values live in the host settings (Railway, Vercel) (and GitHub Actions secrets for CI).
 - **Never log** `note_text`, `X-Anon-Token`, or the token hash. Log request id, route, status, latency only.
 - **Never put real student notes** in tests, seeds, screenshots or issues. Use invented examples.
 - Crisis keyword list and resource contacts are `safety`-labelled changes (2 approvals) and contacts must be verified against the official source (link in the PR).

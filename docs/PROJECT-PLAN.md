@@ -1,5 +1,7 @@
 # MindMeter — Weekly Project Plan
 
+> **Hosting update (23 Nov 2026):** the department Azure account was not confirmed. Read "Azure" below as Vercel (frontend), Railway (API) and Supabase (database). See SRD DR-10 and [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 **Horizon:** 9 weeks, Mon 19 Oct → Sun 20 Dec 2026 · **Team:** Nalen (536801, CE/BE/AI), Christania (532874, FE/SE), Arya (536660, UI/UX + group lead)
 
 > **Assumptions to confirm (edit here first if wrong):**
