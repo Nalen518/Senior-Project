@@ -1,9 +1,9 @@
-"use strict";
+'use strict';
 
 // Stage 1 AI: transparent rule-based trend detection on the student's own mood history.
 // No dataset and no training. Every rule is a named threshold the team can explain in the demo.
 
-const { addDays } = require("./checkDate");
+const { addDays } = require('./checkDate');
 
 const WINDOW_DAYS = 7; // look at the last 7 calendar days
 const MIN_ENTRIES = 3; // need at least 3 check-ins in the window to say anything
@@ -13,17 +13,15 @@ const LOW_STREAK_DAYS = 3; // this many consecutive low days suggests reaching o
 const TREND_DELTA = 0.75; // change between first and second half of the window that counts as a trend
 
 const MESSAGES = {
-  notEnough: "Check in a few more days to see your mood pattern.",
-  lowStreak: (n) =>
-    `Your mood has been low for ${n} days in a row. It is okay to reach out to someone you trust.`,
-  declining: "Your mood has been trending down this week.",
-  improving: "Your mood has been trending up this week.",
-  low: "Your mood has been on the low side for the past few days.",
-  stable: "Your mood has been fairly steady this week.",
+  notEnough: 'Check in a few more days to see your mood pattern.',
+  lowStreak: (n) => `Your mood has been low for ${n} days in a row. It is okay to reach out to someone you trust.`,
+  declining: 'Your mood has been trending down this week.',
+  improving: 'Your mood has been trending up this week.',
+  low: 'Your mood has been on the low side for the past few days.',
+  stable: 'Your mood has been fairly steady this week.',
 };
 
-const average = (values) =>
-  values.reduce((sum, v) => sum + v, 0) / values.length;
+const average = (values) => values.reduce((sum, v) => sum + v, 0) / values.length;
 
 // Counts consecutive low days, walking back from the most recent check-in.
 // A missing calendar day breaks the streak.
@@ -50,14 +48,7 @@ function computeTrend(entries, today) {
     .sort((a, b) => a.check_date.localeCompare(b.check_date));
 
   if (recent.length < MIN_ENTRIES) {
-    return {
-      trend: "stable",
-      message: MESSAGES.notEnough,
-      needsSupport: false,
-      hasEnoughData: false,
-      average7: null,
-      lowStreak: 0,
-    };
+    return { trend: 'stable', message: MESSAGES.notEnough, needsSupport: false, hasEnoughData: false, average7: null, lowStreak: 0 };
   }
 
   const moods = recent.map((e) => e.mood_value);
@@ -65,42 +56,27 @@ function computeTrend(entries, today) {
   const streak = lowStreak([...recent].reverse());
 
   const half = Math.floor(moods.length / 2);
-  const delta =
-    average(moods.slice(moods.length - half)) - average(moods.slice(0, half));
+  const delta = average(moods.slice(moods.length - half)) - average(moods.slice(0, half));
 
-  let trend = "stable";
-  if (streak >= LOW_STREAK_DAYS || delta <= -TREND_DELTA) trend = "declining";
-  else if (delta >= TREND_DELTA) trend = "improving";
+  let trend = 'stable';
+  if (streak >= LOW_STREAK_DAYS || delta <= -TREND_DELTA) trend = 'declining';
+  else if (delta >= TREND_DELTA) trend = 'improving';
 
   const needsSupport = streak >= LOW_STREAK_DAYS || average7 <= LOW_AVERAGE;
 
   let message;
   if (streak >= LOW_STREAK_DAYS) message = MESSAGES.lowStreak(streak);
-  else if (trend === "declining") message = MESSAGES.declining;
-  else if (trend === "improving") message = MESSAGES.improving;
+  else if (trend === 'declining') message = MESSAGES.declining;
+  else if (trend === 'improving') message = MESSAGES.improving;
   else if (average7 <= LOW_AVERAGE) message = MESSAGES.low;
   else message = MESSAGES.stable;
 
-  return {
-    trend,
-    message,
-    needsSupport,
-    hasEnoughData: true,
-    average7: Math.round(average7 * 100) / 100,
-    lowStreak: streak,
-  };
+  return { trend, message, needsSupport, hasEnoughData: true, average7: Math.round(average7 * 100) / 100, lowStreak: streak };
 }
 
 module.exports = {
   computeTrend,
   lowStreak,
   MESSAGES,
-  THRESHOLDS: {
-    WINDOW_DAYS,
-    MIN_ENTRIES,
-    LOW_MOOD,
-    LOW_AVERAGE,
-    LOW_STREAK_DAYS,
-    TREND_DELTA,
-  },
+  THRESHOLDS: { WINDOW_DAYS, MIN_ENTRIES, LOW_MOOD, LOW_AVERAGE, LOW_STREAK_DAYS, TREND_DELTA },
 };

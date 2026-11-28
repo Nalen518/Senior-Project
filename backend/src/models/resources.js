@@ -1,7 +1,7 @@
 "use strict";
 
 // Support contacts and self-help resources, returned in the contract's Resource shape:
-// { id, title, description, url, tags, faculty }.
+// { id, title, description, url, tags, faculty, support_group }.
 // Faculty services are returned for the Support page and grouped by
 // support_group: "faculty". The frontend displays them separately from
 // university-wide counselling, clinic, and crisis services.
@@ -16,15 +16,7 @@ const toResource = (row) => {
   let url;
   if (phoneFirst) url = row.phone ? telLink(row.phone) : row.url;
   else url = row.url || telLink(row.phone);
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    url,
-    tags: row.tags || [],
-    faculty: row.faculty ?? null,
-    support_group: row.support_group,
-  };
+  return { id: row.id, title: row.title, description: row.description, url, tags: row.tags || [], faculty: row.faculty ?? null, support_group: row.support_group };
 };
 
 const SELECT = `
@@ -42,7 +34,6 @@ function createResources(db) {
     /** Every active support resource; the primary crisis contact comes first. */
     async listActive() {
       const { rows } = await db.query(`${SELECT} GROUP BY r.id ${ORDER}`);
-
       return rows.map(toResource);
     },
 
@@ -64,9 +55,7 @@ function createResources(db) {
 
     /** Counselling services a student can book: UGM-wide ones and every faculty's own service. */
     async bookingOptions() {
-      const { rows } = await db.query(
-        `${SELECT} AND r.type = 'counselling' GROUP BY r.id ${ORDER}`,
-      );
+      const { rows } = await db.query(`${SELECT} AND r.type = 'counselling' GROUP BY r.id ${ORDER}`);
       return rows.map(toResource);
     },
   };
