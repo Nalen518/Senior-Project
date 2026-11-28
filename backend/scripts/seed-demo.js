@@ -12,13 +12,13 @@ const path = require("node:path");
 const envFile = path.join(__dirname, "..", ".env");
 if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
 
-const { loadConfig } = require('../src/config/env');
-const { createPool } = require('../src/db/pool');
-const { hashToken, TOKEN_PATTERN } = require('../src/middleware/anonUser');
-const { toLocalDate, addDays } = require('../src/logic/checkDate');
-const { createModels } = require('../src/models');
-const { createCrisisService } = require('../src/services/crisisService');
-const { createNlpService } = require('../src/services/nlpService');
+const { loadConfig } = require("../src/config/env");
+const { createPool } = require("../src/db/pool");
+const { hashToken, TOKEN_PATTERN } = require("../src/middleware/anonUser");
+const { toLocalDate, addDays } = require("../src/logic/checkDate");
+const { createModels } = require("../src/models");
+const { createCrisisService } = require("../src/services/crisisService");
+const { createNlpService } = require("../src/services/nlpService");
 
 // 28 days, oldest first: a normal fortnight, an exam-week dip, then recovery.
 const MOODS = [
@@ -75,7 +75,7 @@ async function main() {
           ? new Date().toISOString()
           : `${day}T20:00:00+07:00`;
 
-      await client.query(
+      const inserted = await client.query(
         `INSERT INTO checkins (user_id, mood_value, note_text, check_date, client_ts, created_at)
          VALUES ($1, $2, $3, $4, $5, $5) RETURNING id`,
         [userId, MOODS[i], NOTES[i] ?? null, day, tappedAt],
@@ -87,13 +87,21 @@ async function main() {
 
     const models = createModels(pool);
     const nlp = createNlpService({ config, models });
-    const sent = await analyzeDemoNotes({ entries, nlp, crisis: createCrisisService({ models }) });
+    const sent = await analyzeDemoNotes({
+      entries,
+      nlp,
+      crisis: createCrisisService({ models }),
+    });
     const { rows: done } = await client.query(
       `SELECT count(*)::int AS n FROM note_analyses a JOIN checkins c ON c.id = a.checkin_id
         WHERE c.user_id = $1 AND a.status = 'done'`,
       [userId],
     );
-    console.log(nlp.enabled ? `AI labelled ${done[0].n} of ${sent} demo notes.` : 'AI is off: no themes for the demo.');
+    console.log(
+      nlp.enabled
+        ? `AI labelled ${done[0].n} of ${sent} demo notes.`
+        : "AI is off: no themes for the demo.",
+    );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     throw err;
@@ -105,7 +113,7 @@ async function main() {
 
 if (require.main === module) {
   main().catch((err) => {
-    console.error('Seeding failed:', err.message);
+    console.error("Seeding failed:", err.message);
     process.exit(1);
   });
 }
