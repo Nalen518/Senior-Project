@@ -104,7 +104,7 @@ npm run dev                   # http://localhost:3000, restarts on file changes
 Demo account for the presentation (so the dashboard is never empty):
 
 ```bash
-# set DEMO_ANON_TOKEN in .env, then:
+# set DEMO_ANON_TOKEN in .env (with the OpenRouter key and model set, the demo also gets themes), then:
 npm run db:seed-demo
 # in the browser console on the frontend: localStorage.setItem('<token key>', '<DEMO_ANON_TOKEN>')
 ```
