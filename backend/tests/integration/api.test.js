@@ -183,7 +183,7 @@ describe('MindMeter API', { skip }, () => {
   test('GET /api/resources: primary crisis contact first, phone as tel: link', async () => {
     const res = await call('GET', '/api/resources');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'faculty', 'id', 'tags', 'title', 'url']);
+    assert.deepEqual(Object.keys(res.body[0]).sort(), ['description', 'faculty', 'id', 'support_group', 'tags', 'title', 'url']);
     assert.equal(res.body[0].url, 'tel:+620000000');
     assert.deepEqual(res.body[1].tags, ['sleep']);
   });
