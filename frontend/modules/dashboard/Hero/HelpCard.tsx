@@ -73,23 +73,27 @@ export function HelpCard({ help }: { help: InsightHelp }) {
 
   return (
     <section
-      className={`mt-6 rounded-xl border p-4 ${
+      className={`mt-10 rounded-2xl border p-6 ${
         help.suggest_booking
-          ? "border-[#F19F65] bg-[#FFF4EC]"
-          : "border-[#D5E1E2] bg-white"
+          ? "border-2 border-[#F19F65] bg-[#FFF4EC]"
+          : "border-[#D9D9D9] bg-white"
       }`}
     >
-      <h2 className="font-serif text-lg font-bold">Talk to someone</h2>
-      <p className="mt-2 text-sm text-[#3D4D59]">{help.message}</p>
+      <h2 className="font-serif text-[22px] font-semibold leading-[30px] text-[#163250]">
+        Talk to someone
+      </h2>
+      <p className="mt-2 max-w-3xl text-sm leading-5 text-[#333333]">
+        {help.message}
+      </p>
 
       {help.booking_options.length > 0 && (
         <>
-          <label className="mt-4 flex flex-col gap-1 text-xs font-bold text-[#3D4D59] sm:flex-row sm:items-center sm:gap-3">
+          <label className="mt-6 flex flex-col gap-2 text-sm font-medium text-[#163250] sm:flex-row sm:items-center sm:gap-3">
             Your faculty (saved only on this device)
             <select
               value={faculty ?? ""}
               onChange={(e) => chooseFaculty(e.target.value)}
-              className="min-h-11 rounded-md border border-[#CBD5E0] bg-white px-3 text-sm font-normal text-[#1F3347]"
+              className="min-h-11 rounded-[10px] border border-[#999999] bg-white px-3 text-sm font-normal text-[#163250] focus:outline-none focus:ring-2 focus:ring-[#2A9D90]"
             >
               <option value="">Prefer not to say</option>
               {Object.entries(facultyLabels).map(([code, label]) => (
@@ -100,25 +104,32 @@ export function HelpCard({ help }: { help: InsightHelp }) {
             </select>
           </label>
 
-          <ul className="mt-4 grid gap-3 md:grid-cols-2">
+          <ul className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {options.map((option) => {
               const isPhone = option.url.startsWith("tel:");
               return (
                 <li
                   key={option.id}
-                  className="rounded-lg border border-[#D5E1E2] bg-[#E3F2F1] p-3"
+                  className="flex flex-col gap-2 rounded-2xl border border-[#D9D9D9] bg-[#A7DADC]/30 p-6"
                 >
-                  <h3 className="font-serif font-bold">{option.title}</h3>
-                  <p className="mt-1 text-xs text-[#3D4D59]">
+                  <h3 className="font-serif text-[22px] font-semibold leading-[30px] text-[#163250]">
+                    {option.title}
+                  </h3>
+                  <p className="text-sm leading-5 text-[#333333]">
                     {option.description}
                   </p>
                   <a
                     href={option.url}
                     target={isPhone ? undefined : "_blank"}
                     rel={isPhone ? undefined : "noopener noreferrer"}
-                    className="mt-3 inline-flex min-h-11 items-center text-xs font-bold underline"
+                    className={`mt-auto inline-flex min-h-11 items-center gap-2 self-start rounded-[10px] text-sm font-medium text-[#163250] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2A9D90] ${
+                      help.suggest_booking
+                        ? "border border-[#163250] bg-[#163250] px-4 text-white hover:bg-[#1F405D]"
+                        : "hover:underline"
+                    }`}
                   >
                     {isPhone ? "Call" : "Book a session"}
+                    <span aria-hidden="true">→</span>
                   </a>
                 </li>
               );
