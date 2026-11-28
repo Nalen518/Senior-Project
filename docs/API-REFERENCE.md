@@ -97,19 +97,20 @@ Response (`InsightResponse`):
 {
   "trend": "declining",
   "message": "Your mood has been trending low for the past few days.",
+  "has_enough_data": true,
   "themes": ["workload", "sleep"],
   "resources": [
     { "id": "…uuid…", "title": "Campus Counselling Service", "description": "Free counselling for students.",
-      "url": "https://example.ac.id/konseling", "tags": ["workload"], "faculty": null }
+      "url": "https://example.ac.id/konseling", "tags": ["workload"], "faculty": null, "support_group": "university" }
   ],
   "help": {
     "message": "Your workload came up in your notes. Breaking tasks into small steps can make them feel lighter. It might help to talk this through with a counsellor. You can book a session below.",
     "suggest_booking": true,
     "booking_options": [
       { "id": "…uuid…", "title": "Campus Counselling Service", "description": "Free counselling for students.",
-        "url": "https://example.ac.id/konseling", "tags": ["workload"], "faculty": null },
+        "url": "https://example.ac.id/konseling", "tags": ["workload"], "faculty": null, "support_group": "university" },
       { "id": "…uuid…", "title": "Faculty of Engineering Counselling", "description": "For engineering students.",
-        "url": "https://example.ac.id/ft", "tags": [], "faculty": "engineering" }
+        "url": "https://example.ac.id/ft", "tags": [], "faculty": "engineering", "support_group": "faculty" }
     ]
   }
 }
@@ -128,7 +129,7 @@ Response (`ResourcesResponse`): primary crisis contact first.
 ```json
 [
   { "id": "…uuid…", "title": "Crisis Hotline", "description": "Immediate help, 24 hours.",
-    "url": "tel:+62000000000", "tags": [], "faculty": null }
+    "url": "tel:+62000000000", "tags": [], "faculty": null, "support_group": "crisis" }
 ]
 ```
 `url` starting with `tel:` should render as a call button.

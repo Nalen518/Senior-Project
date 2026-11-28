@@ -1,9 +1,10 @@
 # MindMeter API Contract
 
-**Version:** 1.2 (17 Nov 2026)
+**Version:** 1.3 (29 Nov 2026)
 
 **Changelog**
 
+- 1.3: records changes already in `shared/contract.ts`: `Resource.support_group` (`crisis`, `university`, `faculty`, `clinic`, `self_help`), `InsightResponse.has_enough_data`, and `saved: false` from `POST /api/checkins` when a newer check-in exists for that day. `GET /api/resources` lists faculty services again, so the Support page can group them (team agreed).
 - 1.2: adds error code `RATE_LIMITED` (`429`, header `Retry-After`) for the 60 requests per minute per IP limit (NFR-03). `GET /api/resources` is never limited. Additive.
 - 1.1: adds `Resource.faculty`, the `FacultyCode` type and `InsightResponse.help` (help card with booking options, SRD FR-17). Additive, nothing renamed or removed. `GET /api/resources` no longer lists faculty-only services.
 - 1.0: first frozen contract.
@@ -117,6 +118,8 @@ Rules in `backend/src/logic/trendRules.js`; thresholds are named constants at th
 | `LOW_AVERAGE`     | 2.5   | 7-day average at or below this means support is needed                          |
 | `TREND_DELTA`     | 0.75  | Second-half average minus first-half average                                    |
 
+`has_enough_data` is `true` only with at least `MIN_ENTRIES` check-ins inside the 7-day window.
+
 `trend` is `"declining"` if the low streak ≥ 3 **or** delta ≤ −0.75; `"improving"` if delta ≥ +0.75; otherwise `"stable"`. `message` is a fixed English template (low streak, declining, improving, low, stable, not enough data). Support is "needed" when the streak ≥ 3 or the average ≤ 2.5; that is internal and only changes which `resources` are returned.
 
 `themes` are the **top 3** theme codes (most frequent first, ties alphabetical) from completed NLP analyses of notes in the **last 14 calendar days** (WIB, including today), per SRD FR-13. The trend itself still uses the 7-day window above. `themes` is empty while NLP is off or no analysis is `done`. The frontend then hides the themes row completely. `resources` is up to 3 items: those tagged with the user's themes, plus counselling/crisis contacts when support is needed (or the user had a crisis check-in in the last 14 days).
@@ -135,7 +138,7 @@ Rules in `backend/src/logic/trendRules.js`; thresholds are named constants at th
 
 ### 5.6 Resources
 
-Public. `tags` are theme codes. `faculty` is always `null` here: faculty-only services are left out because they turn away other students, and only appear in `help.booking_options`. Phone-only contacts come back as a `tel:` link in `url`; crisis contacts prefer the phone number. Order: primary crisis contact first.
+Public. Every active contact, primary crisis contact first. `tags` are theme codes. `support_group` says where the frontend shows it: `crisis` (urgent help, also the Crisis page), `university`, `faculty`, `clinic` or `self_help`. Faculty services are included, with `faculty` set to the faculty code, because the Support page groups them. `faculty` is `null` for everything open to all students. `GET /api/insights` `resources` still leaves faculty services out. Phone-only contacts come back as a `tel:` link in `url`; crisis contacts prefer the phone number.
 
 ### 5.7 NLP (Stage 2, optional)
 
