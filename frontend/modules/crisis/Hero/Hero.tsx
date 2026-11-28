@@ -3,21 +3,56 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { offlineSupportResources } from "@/constant/offlineSupport";
 
 type Resource = Awaited<ReturnType<typeof api.getResources>>[number];
 
 export const Hero = () => {
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isOfflineFallback, setIsOfflineFallback] = useState(false);
+
   const crisisResources = resources.filter(
     (resource) => resource.support_group === "crisis",
   );
 
   useEffect(() => {
-    void api
-      .getResources()
-      .then(setResources)
-      .finally(() => setIsLoading(false));
+    const loadResources = async () => {
+      try {
+        setErrorMessage("");
+        setIsOfflineFallback(false);
+        const data = await api.getResources();
+        setResources(data);
+      } catch {
+        const fallbackCrisis = offlineSupportResources
+          .filter((resource) => resource.support_group === "crisis")
+          .map((resource) => ({
+            id: resource.id,
+            title: resource.title,
+            description: resource.description,
+            url: resource.url,
+            tags: resource.tags,
+            faculty: resource.faculty,
+            support_group: resource.support_group,
+          }));
+
+        if (fallbackCrisis.length > 0) {
+          setResources(fallbackCrisis);
+          setIsOfflineFallback(true);
+        } else {
+          setErrorMessage(
+            navigator.onLine
+              ? "We could not load support contacts right now. Please try again shortly."
+              : "You are offline and support contacts could not be loaded.",
+          );
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadResources();
   }, []);
 
   return (
@@ -32,10 +67,30 @@ export const Hero = () => {
           person can help. You can reach someone now.
         </p>
 
+        {isOfflineFallback && (
+          <p
+            role="status"
+            className="mb-4 w-full rounded-xl border border-[#D1E8E8] bg-[#EAF5F5] px-4 py-3 text-xs text-[#4A5568] md:text-sm"
+          >
+            You are offline. Showing saved emergency contact details.
+          </p>
+        )}
+
         <div className="mb-10 flex w-full flex-col gap-4">
           {isLoading ? (
             <p className="rounded-xl bg-[#EAF5F5] p-5 text-sm text-[#4A5568]">
               Loading support contacts…
+            </p>
+          ) : errorMessage ? (
+            <p
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"
+            >
+              {errorMessage}
+            </p>
+          ) : crisisResources.length === 0 ? (
+            <p className="rounded-xl bg-[#EAF5F5] p-5 text-sm text-[#4A5568]">
+              No support contacts are available right now.
             </p>
           ) : (
             crisisResources.map((resource) => {
@@ -75,9 +130,6 @@ export const Hero = () => {
           the nearest hospital.
         </p>
 
-        <p className="mb-10 text-xs text-[#718096] md:text-sm">
-          Your check-in is saved. No AI insight is shown here.
-        </p>
 
         <Link
           href="/"

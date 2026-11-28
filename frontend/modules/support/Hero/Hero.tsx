@@ -62,6 +62,18 @@ export const Hero = () => {
               pointing you to help. It is not medical advice.
             </p>
           </header>
+          {resourceSource === "offline" && (
+            <section
+              className="mb-5 rounded-xl border border-[#CFE3E4] bg-[#EAF4F4] px-5 py-4 text-[#1F3347] shadow-xs sm:px-6"
+              role="status"
+            >
+              <h2 className="font-serif text-lg font-bold">You are offline.</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-[#3D4D59]">
+                This emergency contact is built into the app so it always works.
+                The full list of UGM services loads when you are back online.
+              </p>
+            </section>
+          )}
 
           <section className="rounded-xl bg-[#C9AFD8] p-4 shadow-sm sm:p-5">
             <h2 className="font-serif text-lg font-bold">
@@ -71,13 +83,6 @@ export const Hero = () => {
               If you are in immediate danger, call local emergency services or
               go to the nearest hospital.
             </p>
-
-            {resourceSource === "offline" && (
-              <p className="mt-3 rounded-lg bg-amber-100 px-4 py-3 text-sm text-amber-950">
-                You’re offline. Showing the locally saved support list; contact
-                details may have changed since they were verified.
-              </p>
-            )}
 
             <div className="mt-3 space-y-2">
               {isLoading && (
@@ -134,86 +139,88 @@ export const Hero = () => {
             </div>
           </section>
 
-          <section className="mt-5">
-            <h2 className="font-serif text-lg font-bold">
-              Talk to a counsellor
-            </h2>
+          {resourceSource !== "offline" && (
+            <section className="mt-5">
+              <h2 className="font-serif text-lg font-bold">
+                Talk to a counsellor
+              </h2>
 
-            <p className="mt-1 text-sm text-[#3D4D59]">
-              Find a counselling service that feels right for you.
-            </p>
+              <p className="mt-1 text-sm text-[#3D4D59]">
+                Find a counselling service that feels right for you.
+              </p>
 
-            {[
-              {
-                title: "University services",
-                group: "university",
-                empty:
-                  "No university-wide counselling services are available yet.",
-              },
-              {
-                title: "Faculty services",
-                group: "faculty",
-                empty:
-                  "Choose your faculty on the dashboard to see relevant faculty counselling services.",
-              },
-              {
-                title: "Clinics",
-                group: "clinic",
-                empty: "No clinic contacts are available yet.",
-              },
-            ].map(({ title, group, empty }) => {
-              const groupResources = resources.filter(
-                (resource) => resource.support_group === group,
-              );
+              {[
+                {
+                  title: "University services",
+                  group: "university",
+                  empty:
+                    "No university-wide counselling services are available yet.",
+                },
+                {
+                  title: "Faculty services",
+                  group: "faculty",
+                  empty:
+                    "Choose your faculty on the dashboard to see relevant faculty counselling services.",
+                },
+                {
+                  title: "Clinics",
+                  group: "clinic",
+                  empty: "No clinic contacts are available yet.",
+                },
+              ].map(({ title, group, empty }) => {
+                const groupResources = resources.filter(
+                  (resource) => resource.support_group === group,
+                );
 
-              return (
-                <details
-                  key={group}
-                  className="mt-3 border-b border-[#B8C0C3] py-3"
-                >
-                  <summary className="cursor-pointer font-serif font-bold">
-                    {title}
-                  </summary>
+                return (
+                  <details
+                    key={group}
+                    className="mt-3 border-b border-[#B8C0C3] py-3"
+                  >
+                    <summary className="cursor-pointer font-serif font-bold">
+                      {title}
+                    </summary>
 
-                  <div className="mt-3 space-y-3">
-                    {groupResources.length === 0 ? (
-                      <p className="text-sm text-[#3D4D59]">{empty}</p>
-                    ) : (
-                      groupResources.map((resource) => {
-                        const isPhoneLink = resource.url.startsWith("tel:");
+                    <div className="mt-3 space-y-3">
+                      {groupResources.length === 0 ? (
+                        <p className="text-sm text-[#3D4D59]">{empty}</p>
+                      ) : (
+                        groupResources.map((resource) => {
+                          const isPhoneLink = resource.url.startsWith("tel:");
 
-                        return (
-                          <article
-                            key={resource.id}
-                            className="flex flex-col gap-3 rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4 sm:flex-row sm:items-center sm:justify-between"
-                          >
-                            <div>
-                              <h3 className="font-serif font-bold">
-                                {resource.title}
-                              </h3>
-
-                              <p className="mt-1 text-sm text-[#3D4D59]">
-                                {resource.description}
-                              </p>
-                            </div>
-
-                            <a
-                              href={resource.url}
-                              target={isPhoneLink ? undefined : "_blank"}
-                              rel={isPhoneLink ? undefined : "noreferrer"}
-                              className="shrink-0 rounded-lg bg-[#F6A15E] px-5 py-2 text-center text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                          return (
+                            <article
+                              key={resource.id}
+                              className="flex flex-col gap-3 rounded-xl border border-[#D5E1E2] bg-[#E3F2F1] p-4 sm:flex-row sm:items-center sm:justify-between"
                             >
-                              {isPhoneLink ? "Call" : "Open"}
-                            </a>
-                          </article>
-                        );
-                      })
-                    )}
-                  </div>
-                </details>
-              );
-            })}
-          </section>
+                              <div>
+                                <h3 className="font-serif font-bold">
+                                  {resource.title}
+                                </h3>
+
+                                <p className="mt-1 text-sm text-[#3D4D59]">
+                                  {resource.description}
+                                </p>
+                              </div>
+
+                              <a
+                                href={resource.url}
+                                target={isPhoneLink ? undefined : "_blank"}
+                                rel={isPhoneLink ? undefined : "noreferrer"}
+                                className="shrink-0 rounded-lg bg-[#F6A15E] px-5 py-2 text-center text-sm font-bold text-[#1F3347] transition-colors hover:bg-[#E09152]"
+                              >
+                                {isPhoneLink ? "Call" : "Open"}
+                              </a>
+                            </article>
+                          );
+                        })
+                      )}
+                    </div>
+                  </details>
+                );
+              })}
+            </section>
+          )}
 
           <p className="mt-8 text-xs text-[#5E6A70]">
             MindMeter is not a medical or diagnostic tool.

@@ -337,7 +337,7 @@ export const Hero = () => {
           </header>
 
           {hasNoCheckins && (
-            <section className="mt-5 rounded-xl border border-[#C9DCDD] bg-[#E3F2F1] p-5">
+            <section className="mt-5 rounded-xl border border-[#C9DCDD] bg-[#E3F2F1]  p-5">
               <h2 className="font-serif text-lg font-bold">No check-in yet</h2>
 
               <p className="mt-1 text-sm text-[#3D4D59]">
@@ -435,7 +435,13 @@ export const Hero = () => {
                     </div>
                   </div>
 
-                  {chartCheckins.length === 0 ? (
+                  {errorMessage ? (
+                    <div className="flex h-44 items-center justify-center px-4">
+                      <p className="text-center text-sm text-[#3D4D59]">
+                        {errorMessage}
+                      </p>
+                    </div>
+                  ) : chartCheckins.length === 0 ? (
                     <div className="flex h-44 items-center justify-center">
                       <p className="text-center text-sm text-[#3D4D59]">
                         No check-ins in this period. Please check in to start
@@ -539,37 +545,42 @@ export const Hero = () => {
                   )}
                 </article>
 
-                {hasEnoughInsightData && (
+                {(hasEnoughInsightData || Boolean(errorMessage)) && (
                   <article className="rounded-xl bg-[#1F405D] p-4 text-white">
                     <p className="text-[10px] font-bold tracking-wider text-[#C9DCDD]">
                       INSIGHT · RECENT CHECK-INS
                     </p>
 
                     <p className="mt-4 font-serif text-lg leading-relaxed">
-                      {insight?.message ??
-                        "Check in a few more days to see your mood pattern."}
+                      {errorMessage ||
+                        (insight?.message ??
+                          "Check in a few more days to see your mood pattern.")}
                     </p>
 
-                    <p className="mt-5 text-[10px] font-bold tracking-wider text-[#C9DCDD]">
-                      THEMES
-                    </p>
+                    {!errorMessage && (
+                      <>
+                        <p className="mt-5 text-[10px] font-bold tracking-wider text-[#C9DCDD]">
+                          THEMES
+                        </p>
 
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {insight?.themes.length ? (
-                        insight.themes.map((theme) => (
-                          <span
-                            key={theme}
-                            className="rounded-full bg-[#C9DCDD] px-3 py-1 text-xs font-bold text-[#1F405D]"
-                          >
-                            {theme}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-sm text-[#C9DCDD]">
-                          Themes will appear as you check in.
-                        </span>
-                      )}
-                    </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {insight?.themes.length ? (
+                            insight.themes.map((theme) => (
+                              <span
+                                key={theme}
+                                className="rounded-full bg-[#C9DCDD] px-3 py-1 text-xs font-bold text-[#1F405D]"
+                              >
+                                {theme}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-[#C9DCDD]">
+                              Themes will appear as you check in.
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </article>
                 )}
               </section>
@@ -688,134 +699,136 @@ export const Hero = () => {
                 </div>
               </section> */}
 
-              <section className="mt-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-baseline gap-2">
-                    <h2 className="font-serif text-lg font-bold">
-                      Check-in history
-                    </h2>
+              {!errorMessage && (
+                <section className="mt-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-baseline gap-2">
+                      <h2 className="font-serif text-lg font-bold">
+                        Check-in history
+                      </h2>
 
-                    <span className="text-xs text-[#5E6A70]">
-                      {historyCheckins.length} check-in
-                      {historyCheckins.length !== 1 ? "s" : ""} · Newest first
-                    </span>
-                  </div>
+                      <span className="text-xs text-[#5E6A70]">
+                        {historyCheckins.length} check-in
+                        {historyCheckins.length !== 1 ? "s" : ""} · Newest first
+                      </span>
+                    </div>
 
-                  <label className="flex items-center gap-2 text-xs font-semibold text-[#3D4D59]">
-                    Show
-                    <select
-                      value={historyPageSize}
-                      onChange={(event) =>
-                        handleHistoryPageSizeChange(
-                          Number(event.target.value) as 7 | 10 | 15 | 31,
-                        )
-                      }
-                      className="rounded-md border border-[#9FB7B9] bg-white px-2 py-1 text-xs font-bold text-[#1F405D] outline-none focus:ring-2 focus:ring-[#2A9D90]"
-                      aria-label="Check-ins shown per page"
-                    >
-                      <option value={7}>7</option>
-                      <option value={10}>10</option>
-                      <option value={15}>15</option>
-                      <option value={31}>31</option>
-                    </select>
-                    per page
-                  </label>
-                </div>
-
-                <div className="mt-3 overflow-hidden rounded-xl border border-[#D9E0E2] bg-white">
-                  {visibleCheckins.length === 0 ? (
-                    <p className="p-4 text-sm text-[#3D4D59]">
-                      No check-ins yet. Visit Today to make your first one.
-                    </p>
-                  ) : (
-                    visibleCheckins.map((checkin) => {
-                      const mood = getMoodDetails(checkin.mood_value);
-
-                      return (
-                        <article
-                          key={checkin.id}
-                          className="grid grid-cols-[4.5rem_1.5rem_3.5rem_1fr] items-center gap-2 border-b border-[#E4E8E9] px-3 py-2 text-xs last:border-b-0"
-                        >
-                          <span>{formatDate(checkin.created_at)}</span>
-
-                          <span
-                            className="flex h-7 w-7 items-center justify-center rounded-full"
-                            style={{ backgroundColor: mood.color }}
-                          >
-                            <MoodFace
-                              mood={checkin.mood_value}
-                              className="h-5 w-5 text-[#1F3347]"
-                            />
-                          </span>
-
-                          <span>{mood.label}</span>
-
-                          <span className="text-[#3D4D59]">
-                            {checkin.note_text || "No note"}
-                          </span>
-                        </article>
-                      );
-                    })
-                  )}
-                  {historyCheckins.length > historyPageSize && (
-                    <nav
-                      className="mt-4 mb-4 flex flex-wrap items-center justify-center gap-1"
-                      aria-label="Check-in history pages"
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setHistoryPage((page) => Math.max(1, page - 1))
-                        }
-                        disabled={currentHistoryPage === 1}
-                        className="rounded-md px-3 py-1.5 text-xs font-bold text-[#1F405D] disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Previous
-                      </button>
-
-                      {historyPageItems.map((item, index) =>
-                        item === "ellipsis" ? (
-                          <span
-                            key={`ellipsis-${index}`}
-                            className="px-2 text-xs text-[#5E6A70]"
-                          >
-                            …
-                          </span>
-                        ) : (
-                          <button
-                            key={item}
-                            type="button"
-                            onClick={() => setHistoryPage(item)}
-                            aria-current={
-                              item === currentHistoryPage ? "page" : undefined
-                            }
-                            className={`h-8 min-w-8 rounded-md px-2 text-xs font-bold transition-colors ${
-                              item === currentHistoryPage
-                                ? "bg-[#1F405D] text-white"
-                                : "text-[#1F405D] hover:bg-[#E3F2F1]"
-                            }`}
-                          >
-                            {item}
-                          </button>
-                        ),
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setHistoryPage((page) =>
-                            Math.min(totalHistoryPages, page + 1),
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#3D4D59]">
+                      Show
+                      <select
+                        value={historyPageSize}
+                        onChange={(event) =>
+                          handleHistoryPageSizeChange(
+                            Number(event.target.value) as 7 | 10 | 15 | 31,
                           )
                         }
-                        disabled={currentHistoryPage === totalHistoryPages}
-                        className="rounded-md px-3 py-1.5 text-xs font-bold text-[#1F405D] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-md border border-[#9FB7B9] bg-white px-2 py-1 text-xs font-bold text-[#1F405D] outline-none focus:ring-2 focus:ring-[#2A9D90]"
+                        aria-label="Check-ins shown per page"
                       >
-                        Next
-                      </button>
-                    </nav>
-                  )}
-                </div>
-              </section>
+                        <option value={7}>7</option>
+                        <option value={10}>10</option>
+                        <option value={15}>15</option>
+                        <option value={31}>31</option>
+                      </select>
+                      per page
+                    </label>
+                  </div>
+
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[#D9E0E2] bg-white">
+                    {visibleCheckins.length === 0 ? (
+                      <p className="p-4 text-sm text-[#3D4D59]">
+                        No check-ins yet. Visit Today to make your first one.
+                      </p>
+                    ) : (
+                      visibleCheckins.map((checkin) => {
+                        const mood = getMoodDetails(checkin.mood_value);
+
+                        return (
+                          <article
+                            key={checkin.id}
+                            className="grid grid-cols-[4.5rem_1.5rem_3.5rem_1fr] items-center gap-2 border-b border-[#E4E8E9] px-3 py-2 text-xs last:border-b-0"
+                          >
+                            <span>{formatDate(checkin.created_at)}</span>
+
+                            <span
+                              className="flex h-7 w-7 items-center justify-center rounded-full"
+                              style={{ backgroundColor: mood.color }}
+                            >
+                              <MoodFace
+                                mood={checkin.mood_value}
+                                className="h-5 w-5 text-[#1F3347]"
+                              />
+                            </span>
+
+                            <span>{mood.label}</span>
+
+                            <span className="text-[#3D4D59]">
+                              {checkin.note_text || "No note"}
+                            </span>
+                          </article>
+                        );
+                      })
+                    )}
+                    {historyCheckins.length > historyPageSize && (
+                      <nav
+                        className="mt-4 mb-4 flex flex-wrap items-center justify-center gap-1"
+                        aria-label="Check-in history pages"
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setHistoryPage((page) => Math.max(1, page - 1))
+                          }
+                          disabled={currentHistoryPage === 1}
+                          className="rounded-md px-3 py-1.5 text-xs font-bold text-[#1F405D] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Previous
+                        </button>
+
+                        {historyPageItems.map((item, index) =>
+                          item === "ellipsis" ? (
+                            <span
+                              key={`ellipsis-${index}`}
+                              className="px-2 text-xs text-[#5E6A70]"
+                            >
+                              …
+                            </span>
+                          ) : (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => setHistoryPage(item)}
+                              aria-current={
+                                item === currentHistoryPage ? "page" : undefined
+                              }
+                              className={`h-8 min-w-8 rounded-md px-2 text-xs font-bold transition-colors ${
+                                item === currentHistoryPage
+                                  ? "bg-[#1F405D] text-white"
+                                  : "text-[#1F405D] hover:bg-[#E3F2F1]"
+                              }`}
+                            >
+                              {item}
+                            </button>
+                          ),
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setHistoryPage((page) =>
+                              Math.min(totalHistoryPages, page + 1),
+                            )
+                          }
+                          disabled={currentHistoryPage === totalHistoryPages}
+                          className="rounded-md px-3 py-1.5 text-xs font-bold text-[#1F405D] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Next
+                        </button>
+                      </nav>
+                    )}
+                  </div>
+                </section>
+              )}
             </>
           )}
 

@@ -9,15 +9,16 @@ export type OfflineSupportResource = Resource & {
  * an official source. Keep verified_at updated.
  */
 export const offlineSupportResources: OfflineSupportResource[] = [
-  // Example shape—replace with a verified contact before adding it:
-  //
-  // {
-  //   id: "00000000-0000-4000-8000-000000000001",
-  //   title: "Verified support service",
-  //   description: "Describe who can use the service and when it is available.",
-  //   url: "tel:+620000000000",
-  //   tags: [],
-  //   verified_at: "2026-11-17",
-  // faculty: null,
-  // },
+
+  {
+    id: "00000000-0000-4000-8000-000000000001",
+    title: "MHERL — UGM Mental Health Emergency Response Line (24 hours)",
+    description:
+      "UGM Mental Health Emergency Response Line. Chat on WhatsApp any time, 24 hours a day, if you are in crisis or need help right away.",
+    url: "https://wa.me/6281329520052",
+    tags: [],
+    verified_at: "2026-11-17",
+    faculty: null,
+    support_group: "crisis",
+  },
 ];
