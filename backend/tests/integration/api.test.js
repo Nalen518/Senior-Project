@@ -87,16 +87,16 @@ describe("MindMeter API", { skip }, () => {
       CRISIS_PHRASE,
     ]);
     await pool.query(`
-      INSERT INTO resources (title, description, phone, type, is_primary_crisis, sort_order)
-        VALUES ('Kontak krisis (uji)', 'Kontak uji', '+62 000-0000', 'crisis', true, 0);
-      INSERT INTO resources (title, description, url, type, sort_order)
-        VALUES ('Tips tidur (uji)', 'Sumber uji', 'https://example.org/tidur', 'self_help', 1);
+      INSERT INTO resources (title, description, phone, type, support_group, is_primary_crisis, sort_order)
+        VALUES ('Kontak krisis (uji)', 'Kontak uji', '+62 000-0000', 'crisis', 'crisis', true, 0);
+      INSERT INTO resources (title, description, url, type, support_group, sort_order)
+        VALUES ('Tips tidur (uji)', 'Sumber uji', 'https://example.org/tidur', 'self_help', 'self_help', 1);
       INSERT INTO resource_themes (resource_id, theme_id)
         SELECT r.id, t.id FROM resources r, themes t WHERE r.title = 'Tips tidur (uji)' AND t.code = 'sleep';
-      INSERT INTO resources (title, description, url, type, sort_order)
-        VALUES ('Konseling UGM (uji)', 'Sumber uji', 'https://example.org/ugm', 'counselling', 2);
-      INSERT INTO resources (title, description, url, type, sort_order, faculty)
-        VALUES ('Konseling FT (uji)', 'Sumber uji', 'https://example.org/ft', 'counselling', 3, 'engineering');`);
+      INSERT INTO resources (title, description, url, type, support_group, sort_order)
+        VALUES ('Konseling UGM (uji)', 'Sumber uji', 'https://example.org/ugm', 'counselling', 'university', 2);
+      INSERT INTO resources (title, description, url, type, support_group, sort_order, faculty)
+        VALUES ('Konseling FT (uji)', 'Sumber uji', 'https://example.org/ft', 'counselling', 'faculty', 3, 'engineering');`);
 
     const config = {
       timeZone: "Asia/Jakarta",
@@ -280,6 +280,7 @@ describe("MindMeter API", { skip }, () => {
       "description",
       "faculty",
       "id",
+      "support_group",
       "tags",
       "title",
       "url",
